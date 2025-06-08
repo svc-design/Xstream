@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
-import '../../services/update_service.dart';
+import '../../services/update/update_checker.dart';
+import '../../services/update/update_platform.dart';
 import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
@@ -97,45 +98,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onCheckUpdate() async {
+  void _onCheckUpdate() {
     logConsoleKey.currentState?.addLog('开始检查更新...');
-    final info = await UpdateService.checkUpdate(
+    UpdateChecker.manualCheck(
+      context,
       currentVersion: _currentVersion(),
-      daily: GlobalState.useDailyBuild.value,
+      channel: GlobalState.useDailyBuild.value ? UpdateChannel.beta : UpdateChannel.stable,
     );
-    if (!mounted) return;
-    if (info != null) {
-      logConsoleKey.currentState?.addLog('发现新版本 ${info.version}');
-      if (info.notes.isNotEmpty) {
-        logConsoleKey.currentState?.addLog(info.notes);
-      }
-      logConsoleKey.currentState?.addLog('下载地址: ${info.url}');
-      final go = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('发现新版本 ${info.version}'),
-          content: Text(info.notes.isNotEmpty ? info.notes : '是否前往下载?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('下载'),
-            ),
-          ],
-        ),
-      );
-      if (go == true) {
-        await UpdateService.launchDownload(info.url);
-      }
-    } else {
-      logConsoleKey.currentState?.addLog('已是最新版本');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已是最新版本')),
-      );
-    }
   }
 
   @override
@@ -246,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showAboutDialog(
                       context: context,
                       applicationName: 'XStream',
-                      applicationVersion: _buildVersion(), // v0.1.1-2025-06-06-8d7a5a8
+                      applicationVersion: _buildVersion(),
                       applicationLegalese: '''
                     © 2025 svc.plus
                     Based on Xray-core 25.3.6 – https://github.com/XTLS/Xray-core
@@ -259,7 +228,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const VerticalDivider(width: 1),
-        // 右侧日志输出面板
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16.0),

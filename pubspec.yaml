@@ -15,6 +15,7 @@ dependencies:
   process_run: ^1.2.4
   flutter_lints: ^6.0.0
   url_launcher: ^6.3.1
+  shared_preferences: ^2.2.2
   json_annotation: ^4.4.0
   flutter_launcher_icons: ^0.13.1  # This is for managing app icons
 
