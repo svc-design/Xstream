@@ -53,6 +53,9 @@ Linux 平台同样需要先生成 `libgo_native_bridge.so`，执行：
 ./build_scripts/build_linux.sh
 ```
 
+脚本会默认使用 `gcc` 编译，确保生成的库依赖标准 glibc，避免链接问题。
+若检测到 Flutter Snap环境，会继续使用其中自带的编译器编译 Go 库，使其与主程序的 glibc版本保持一致，从而提升兼容性。
+
 该脚本在 CI 中也会被调用，随后运行 `flutter build linux --release` 构建桌面应用。
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 
