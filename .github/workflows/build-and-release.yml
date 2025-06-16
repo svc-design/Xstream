@@ -192,6 +192,7 @@ jobs:
           path: |
             build/macos/*.dmg
             build/linux/x64/release/bundle/xstream-linux.zip
+            build/linux/x64/release/AppImage/xstream-linux.AppImage
             build/windows/x64/runner/Release/xstream-windows.zip
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
