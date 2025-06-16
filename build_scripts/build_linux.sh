@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 set -e
-DIR="$(dirname "$0")/.."
+
+# 基础目录
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$DIR/go_core"
 
-# Ensure CGO is enabled for Linux builds
-if [ "$(go env CGO_ENABLED)" != "1" ]; then
-  export CGO_ENABLED=1
-fi
+# 默认目标架构
+GOOS=linux
+GOARCH=amd64
 
+# 输出路径：Flutter 预期位置 & 打包预期位置
+FLUTTER_LIB_DIR="$DIR/linux/lib"
 
-# Prefer the clang toolchain bundled with Flutter so the generated library
-# links against the same glibc version as the Flutter build.
+# 确保输出目录都存在
+mkdir -p "$FLUTTER_LIB_DIR"
+
+# 启用CGO
+export CGO_ENABLED=1
+
+# 检测 Flutter clang 工具链
 FLUTTER_BIN=$(command -v flutter || true)
 if [ -n "$FLUTTER_BIN" ]; then
-  FLUTTER_ROOT=$(readlink -f "$FLUTTER_BIN")
-  FLUTTER_ROOT=$(dirname "$FLUTTER_ROOT")
-  FLUTTER_ROOT=$(dirname "$FLUTTER_ROOT")
+  FLUTTER_ROOT=$(readlink -f "$FLUTTER_BIN" | xargs dirname | xargs dirname)
   FLUTTER_ROOT=${FLUTTER_ROOT%/bin}
   CANDIDATE_CC="$FLUTTER_ROOT/usr/bin/clang"
   CANDIDATE_CXX="$FLUTTER_ROOT/usr/bin/clang++"
@@ -27,6 +33,7 @@ fi
 
 : "${CC:=$(command -v clang)}"
 : "${CXX:=$(command -v clang++)}"
+
 if [ -z "$CC" ] || [ -z "$CXX" ]; then
   echo "clang/clang++ are required" >&2
   exit 1
@@ -35,8 +42,7 @@ fi
 export CC
 export CXX
 
-CC=$CC GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o ../bindings/libgo_native_bridge.so
+echo ">>> Building Go shared library"
+CC=$CC GOOS=$GOOS GOARCH=$GOARCH go build -buildmode=c-shared -o "$FLUTTER_LIB_DIR/libgo_native_bridge.so"
 
-# Copy the library next to the executable so it is bundled with the app
-mkdir -p ../linux/lib
-cp ../bindings/libgo_native_bridge.so ../linux/lib/
+echo ">>> Build complete: $FLUTTER_LIB_DIR/libgo_native_bridge.so"

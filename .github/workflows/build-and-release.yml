@@ -40,12 +40,12 @@ jobs:
             arch: arm64
           - platform: linux
             arch: x64
-          - platform: android
-            arch: arm64
-          - platform: ios
-            arch: arm64
           - platform: windows
             arch: x64
+          - platform: ios
+            arch: arm64
+          - platform: android
+            arch: arm64
 
     runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-latest","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
 
@@ -113,6 +113,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
+
+      - name: Ensure ImageMagick is installed (Linux only)
+        if: ${{ matrix.platform == 'linux' }}
+        run: sudo apt-get install -y imagemagick
 
       - name: Build Go shared library (Linux)
         if: ${{ matrix.platform == 'linux' }}
@@ -192,6 +196,7 @@ jobs:
           path: |
             build/macos/*.dmg
             build/linux/x64/release/bundle/xstream-linux.zip
+            build/linux/x64/release/AppImage/xstream-linux.AppImage
             build/windows/x64/runner/Release/xstream-windows.zip
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
