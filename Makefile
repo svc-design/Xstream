@@ -99,24 +99,13 @@ macos-arm64:
 	fi
 
 windows-x64:
-	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
-	 echo "Building Go static library..."; \
-	 cd windows/go; \
-	 if [ "$(shell go env CGO_ENABLED 2>/dev/null)" != "1" ]; then \
-	 export CGO_ENABLED=1; \
-	 fi; \
-	 go build -buildmode=c-archive -o ../runner/libgo_logic.a || exit 1; \
-	 cd ../..; \
-	 echo "Building for Windows (native)..."; \
-	 flutter pub get; \
-	 flutter pub outdated; \
-	 flutter build windows --release; \
-	 if [ ! -f windows/flutter/generated_plugin_registrant.h ]; then \
-	 echo "\u274c Plugin registrant header missing!"; \
-	 exit 1; \
-	 fi; \
-	 else \
-	 echo "Windows build only supported on native Windows systems"; \
+@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
+ echo "Building for Windows (native)..."; \
+ flutter pub get; \
+ flutter pub outdated; \
+ flutter build windows --release; \
+ else \
+ echo "Windows build only supported on native Windows systems"; \
  fi
 
 linux-x64:

@@ -45,11 +45,12 @@ macos/Runner/Assets.xcassets/AppIcon.appiconset/icon_*.png
 # Linux app icon
 linux/app_icon.png
 
+# Generated FFI artifacts
+bindings/*.so
+bindings/*.dll
+bindings/*.h
+linux/lib/
 # Windows temporary iconset and generated ico
 windows/runner/resources/app_icon.ico
 windows/runner/resources/iconset/
 
-linux/go/libnative_bridge.a
-linux/go/libnative_bridge.h
-windows/go/libgo_logic.a
-windows/go/libgo_logic.h

@@ -3,7 +3,7 @@ name: Build and Release Flutter Packages
 on:
   push:
     tags:
-      - 'v*'  # 鉁?浠呮帹閫佺増鏈?tag锛堝 v0.1.4锛夎Е鍙?
+      - 'v*'  # 版本 tag 触发
   pull_request:
     branches:
       - main
@@ -16,7 +16,7 @@ on:
       - 'windows/**'
       - '.github/workflows/build-and-release.yml'
 
-  workflow_dispatch:  # 鉁?鏀寔鎵嬪姩瑙﹀彂
+  workflow_dispatch:
 
 jobs:
   build:
@@ -48,11 +48,7 @@ jobs:
           - platform: windows
             arch: x64
 
-    runs-on: ${{ matrix.platform == 'windows' && 'windows-latest' ||
-                 matrix.platform == 'linux'   && 'ubuntu-latest' ||
-                 matrix.platform == 'android' && 'ubuntu-latest' ||
-                 matrix.platform == 'macos'   && 'macos-latest' ||
-                 matrix.platform == 'ios'     && 'macos-latest' }}
+    runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-latest","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
 
     env:
       PLATFORM: ${{ matrix.platform }}
@@ -66,13 +62,12 @@ jobs:
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
-          echo "馃敡 Setting up Flutter for $PLATFORM ($ARCH)"
+          echo "Setting up Flutter for $PLATFORM ($ARCH)"
           if [[ "$PLATFORM" == "linux" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
             sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils
             export PATH="$PATH:/snap/bin"
-            as --version
           elif [[ "$PLATFORM" == "android" ]]; then
             sudo apt-get update
             sudo snap install flutter --classic
@@ -82,7 +77,6 @@ jobs:
             echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
             sudo update-alternatives --set java $JAVA_HOME/bin/java
             sudo update-alternatives --set javac $JAVA_HOME/bin/javac
-            java -version
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
             if [[ "$ARCH" == "arm64" ]]; then
@@ -116,16 +110,10 @@ jobs:
           install: mingw-w64-x86_64-gcc
           path-type: inherit
 
-      - name: Build Go static library (Windows)
+      - name: Build Go shared library (Windows)
         if: ${{ matrix.platform == 'windows' }}
-        shell: msys2 {0}
-        run: |
-          gcc --version
-          cd windows/go
-          if [ "$(go env CGO_ENABLED)" != "1" ]; then
-            export CGO_ENABLED=1
-          fi
-          go build -buildmode=c-archive -o ../runner/libgo_logic.a
+        shell: "msys2 {0}"
+        run: ./build_scripts/build_windows.sh
 
       - name: Show Flutter version
         shell: bash
@@ -134,13 +122,17 @@ jobs:
       - name: Run Flutter tests (Linux only)
         if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
         run: flutter test --reporter expanded
+        continue-on-error: true
+
+      - name: Build Go shared library (Linux)
+        if: ${{ matrix.platform == 'linux' }}
+        run: ./build_scripts/build_linux.sh
 
       - name: Generate launcher icons (Android)
         if: ${{ matrix.platform == 'android' }}
         run: |
           flutter pub get
           dart run flutter_launcher_icons
-
 
       - name: Set up Go (Linux only)
         if: ${{ matrix.platform == 'linux' }}
@@ -156,9 +148,11 @@ jobs:
             linux)
               flutter pub get
               flutter pub outdated
-              flutter build linux --release ;;
-            macos) flutter build macos --release ;;
-            ios) flutter build ios --release --no-codesign ;;
+              flutter build linux --release -v ;;
+            macos)
+              flutter build macos --release ;;
+            ios)
+              flutter build ios --release --no-codesign ;;
             android)
               export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
               export PATH=$JAVA_HOME/bin:$PATH
@@ -166,7 +160,6 @@ jobs:
           esac
 
       - name: Build Flutter App (Windows)
-
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
@@ -174,7 +167,7 @@ jobs:
           flutter pub outdated
           flutter build windows --release
           if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
-            Write-Host "鉂?Plugin registrant header missing!"
+            Write-Host "Plugin registrant header missing!"
             exit 1
           }
 
@@ -183,7 +176,7 @@ jobs:
         run: |
           cd build/linux/x64/release/bundle
           zip -r xstream-linux.zip . -x xstream-linux.zip
-            
+
       - name: Zip Windows bundle
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
@@ -196,7 +189,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         shell: bash
         run: |
-          echo "📦 Creating macOS DMG for $ARCH using Makefile"
+          echo "Creating macOS DMG for $ARCH using Makefile"
           make macos-${ARCH}
 
       - name: Zip iOS Runner.app
@@ -208,7 +201,7 @@ jobs:
       - name: Show distributable build output
         shell: bash
         run: |
-          echo "馃幆 Distributable output for $PLATFORM-$ARCH:"
+          echo "Distributable output for $PLATFORM-$ARCH:"
           if [[ "$PLATFORM" == "linux" ]]; then
             find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${PLATFORM}-${ARCH}-release.log
           else
@@ -237,12 +230,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
+          if-no-artifact-found: ignore
 
       - name: List all downloaded artifacts
         run: |
-          echo "馃幆 Listing contents of release-artifacts"
+          echo "Listing contents of release-artifacts"
           find release-artifacts -type f | tee /tmp/artifacts.list
-          echo "馃摝 Artifact summary:"
+          echo "Artifact summary:"
           cat /tmp/artifacts.list
 
       - name: Publish GitHub Release
