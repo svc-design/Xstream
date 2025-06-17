@@ -7,27 +7,28 @@
 1. 安装 [Go](https://go.dev/dl/) 1.20+ 并确保 `go` 在 `PATH` 中。
 2. 安装 [Flutter](https://docs.flutter.dev/get-started/install/windows) SDK。
 
-## 2. 编译桥接库
+## 2. 编译 Go 共享库
 
-执行脚本 `build_scripts/build_windows.sh` 在 `bindings/` 目录下生成 `libgo_native_bridge.dll`：
+在项目根目录执行：
 
 ```bash
-./build_scripts/build_windows.sh
-该脚本会在需要时开启 `CGO_ENABLED` 并使用 `x86_64-w64-mingw32-gcc` 进行交叉编译，
-最终生成可供 FFI 调用的静态 DLL。
-
-生成的 DLL 会被 Dart 通过 `DynamicLibrary.open` 加载。
-## 3. 构建 Flutter 应用
-
-在完成 DLL 构建后，运行：
-```bash
-flutter build windows --release
-生成的应用位于 `build/windows/x64/runner/Release/`。
+bash build_scripts/build_windows.sh
 ```
 
-加入 `--debug` 参数会在控制台输出启动日志，便于排查依赖路径或权限问题。
+执行脚本 `build_scripts/build_windows.sh`，脚本会利用 MinGW 工具链将 `go_core` 编译为 `bindings/libbridge.dll`供 FFI 调用使用，生成的 DLL 会被 Dart 通过 `DynamicLibrary.open` 加载。
 
-## 6. Release Packaging
+## 3. 构建 Flutter 桌面应用
+
+```
+flutter clean
+flutter pub get
+flutter build windows
+```
+
+构建前请确保已执行上一步生成 `libbridge.dll`，否则应用无法加载共享库。
+
+
+## 4. Release Packaging
 
 GitHub Actions will compress the entire `build/windows/x64/runner/Release`
 directory into `xstream-windows.zip` for distribution. The archive includes
