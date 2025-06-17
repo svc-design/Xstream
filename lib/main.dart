@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       title: 'XStream',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: MainPage(),
+      home: const MainPage(),
     );
   }
 }

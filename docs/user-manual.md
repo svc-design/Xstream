@@ -71,12 +71,25 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 
 ### 设置浏览器代理插件
 
-1. 安装浏览器插件（如 SwitchyOmega）。
-2. 创建一个代理配置：
-   - 类型：SOCKS5
-   - 地址：`127.0.0.1`
-   - 端口：`1080`
-3. 应用此配置即可让浏览器通过代理访问外网。
+使用 ZeroOmega 配置 Xray 代理。本指南假设你已经在本地或远程服务器上成功部署了 Xray-core，可在浏览器中通过 ZeroOmega 实现代理切换。
+
+1. 安装 ZeroOmega 插件（https://github.com/zero-peak/ZeroOmega）。  
+   ZeroOmega 支持 Chrome Web Store、Microsoft Edge Addons、Firefox Addon，兼容 SwitchyOmega，基于 Manifest V3。
+2. 在 ZeroOmega 创建 Xray 代理配置：
+   - 情景模式名称：例如 Xray-SOCKS5
+   - 代理服务器类型：SOCKS5
+   - 服务器地址：127.0.0.1
+   - 端口：1080
+   - 保存配置。
+3. （可选）设置自动切换规则：
+   - 创建新的「自动切换模式」，可导入 GFWList、PAC 或自定义规则。
+   - 规则示例：
+     - *.google.com  --> 使用 Xray-SOCKS5
+     - *.youtube.com --> 使用 Xray-SOCKS5
+   - 默认模式设置为「直连」，其余符合规则的域名通过 Xray 代理访问。
+4. 效果验证：
+   - 访问 https://www.google.com/ 等站点，确认是否已通过代理。
+   - 也可通过浏览器访问 ip.sb 查询外网地址。
 
 ### 启动代理服务
 

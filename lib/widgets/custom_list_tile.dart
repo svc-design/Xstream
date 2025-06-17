@@ -9,11 +9,11 @@ class CustomListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.network_check),
+      leading: const Icon(Icons.network_check),
       title: Text(title),
       subtitle: Text(subtitle),
       trailing: IconButton(
-        icon: Icon(Icons.play_arrow),
+        icon: const Icon(Icons.play_arrow),
         onPressed: () {
           // Connection logic
         },

@@ -3,7 +3,7 @@ name: Build and Release Flutter Packages
 on:
   push:
     tags:
-      - 'v*'  # 版本 tag 触发
+      - 'v*'
   pull_request:
     branches:
       - main
@@ -15,7 +15,6 @@ on:
       - 'linux/**'
       - 'windows/**'
       - '.github/workflows/build-and-release.yml'
-
   workflow_dispatch:
 
 jobs:
@@ -41,12 +40,12 @@ jobs:
             arch: arm64
           - platform: linux
             arch: x64
-          - platform: android
-            arch: arm64
-          - platform: ios
-            arch: arm64
           - platform: windows
             arch: x64
+          - platform: ios
+            arch: arm64
+          - platform: android
+            arch: arm64
 
     runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-latest","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
 
@@ -58,35 +57,27 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      # 通用 flutter setup
       - name: Set up Flutter (Unix)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
         run: |
-          echo "Setting up Flutter for $PLATFORM ($ARCH)"
-          if [[ "$PLATFORM" == "linux" ]]; then
+          if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
             sudo apt-get update
-            sudo snap install flutter --classic
-            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils
-            export PATH="$PATH:/snap/bin"
-          elif [[ "$PLATFORM" == "android" ]]; then
-            sudo apt-get update
-            sudo snap install flutter --classic
-            export PATH="$PATH:/snap/bin"
-            sudo apt-get install -y openjdk-17-jdk
-            JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-            echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-            sudo update-alternatives --set java $JAVA_HOME/bin/java
-            sudo update-alternatives --set javac $JAVA_HOME/bin/javac
+            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
+            sudo apt-get install -y curl unzip clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
+            mkdir -p $HOME/flutter
+            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
+            tar xf flutter_linux_3.22.2-stable.tar.xz -C $HOME/flutter --strip-components=1
+            export PATH="$HOME/flutter/bin:$PATH"
+            flutter --version
+            flutter doctor
+            echo "$HOME/flutter/bin" >> $GITHUB_PATH
           elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            if [[ "$ARCH" == "arm64" ]]; then
-              eval "$(/opt/homebrew/bin/brew shellenv)"
-            else
-              eval "$(/usr/local/bin/brew shellenv)"
-            fi
             brew install --cask flutter
             export PATH="$PATH:$HOME/Library/Flutter/bin"
           fi
+          flutter --version
           flutter doctor
 
       - name: Set up Flutter (Windows)
@@ -96,6 +87,7 @@ jobs:
           channel: stable
           flutter-version: '3.32.2'
 
+      # Go & MSYS2 setup (Windows)
       - name: Set up Go (Windows)
         if: ${{ matrix.platform == 'windows' }}
         uses: actions/setup-go@v5
@@ -115,99 +107,88 @@ jobs:
         shell: "msys2 {0}"
         run: ./build_scripts/build_windows.sh
 
-      - name: Show Flutter version
-        shell: bash
-        run: flutter --version
-
-      - name: Run Flutter tests (Linux only)
-        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x64' }}
-        run: flutter test --reporter expanded
-        continue-on-error: true
-
-      - name: Build Go shared library (Linux)
-        if: ${{ matrix.platform == 'linux' }}
-        run: ./build_scripts/build_linux.sh
-
-      - name: Generate launcher icons (Android)
-        if: ${{ matrix.platform == 'android' }}
-        run: |
-          flutter pub get
-          dart run flutter_launcher_icons
-
+      # Go for Linux
       - name: Set up Go (Linux only)
         if: ${{ matrix.platform == 'linux' }}
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
 
-      - name: Build Flutter App (Unix-like)
-        if: ${{ matrix.platform != 'windows' }}
-        shell: bash
-        run: |
-          case $PLATFORM in
-            linux)
-              flutter pub get
-              flutter pub outdated
-              flutter build linux --release -v ;;
-            macos)
-              flutter build macos --release ;;
-            ios)
-              flutter build ios --release --no-codesign ;;
-            android)
-              export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-              export PATH=$JAVA_HOME/bin:$PATH
-              flutter build apk --release ;;
-          esac
+      - name: Ensure ImageMagick is installed (Linux only)
+        if: ${{ matrix.platform == 'linux' }}
+        run: sudo apt-get install -y imagemagick
 
-      - name: Build Flutter App (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
+      - name: Build Go shared library (Linux)
+        if: ${{ matrix.platform == 'linux' }}
+        run: ./build_scripts/build_linux.sh
+
+      # Flutter pub
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # Flutter test 只在 Linux 跑
+      - name: Run Flutter tests (Linux only)
+        if: ${{ matrix.platform == 'linux' }}
+        run: flutter test --reporter expanded
+        continue-on-error: true
+
+      # Android build
+      - name: Build Android App
+        if: ${{ matrix.platform == 'android' }}
+        shell: bash
         run: |
           flutter pub get
-          flutter pub outdated
-          flutter build windows --release
-          if (-not (Test-Path "windows/flutter/generated_plugin_registrant.h")) {
-            Write-Host "Plugin registrant header missing!"
-            exit 1
-          }
+          dart run flutter_launcher_icons
+          flutter build apk --release
 
-      - name: Zip Linux bundle
+      # iOS
+      - name: Build iOS App
+        if: ${{ matrix.platform == 'ios' }}
+        shell: bash
+        run: flutter build ios --release --no-codesign
+
+      # macOS
+      - name: Build macOS App
+        if: ${{ matrix.platform == 'macos' }}
+        shell: bash
+        run: flutter build macos --release
+
+      - name: Package macOS DMG
+        if: ${{ matrix.platform == 'macos' }}
+        run: make macos-${ARCH}
+
+      # Linux build
+      - name: Build Linux App
+        if: ${{ matrix.platform == 'linux' }}
+        shell: bash
+        run: flutter build linux --release
+
+      - name: Package and verify Linux bundle
         if: ${{ matrix.platform == 'linux' }}
         run: |
-          cd build/linux/x64/release/bundle
-          zip -r xstream-linux.zip . -x xstream-linux.zip
+          bash build_scripts/package_linux_bundle.sh
 
-      - name: Zip Windows bundle
+      # Windows build
+      - name: Build Windows App
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
         run: |
-          $releaseDir = "build/windows/x64/runner/Release"
-          $zipPath = "$releaseDir/xstream-windows.zip"
-          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath
+          flutter build windows --release
 
-      - name: Create DMG package (macOS)
-        if: ${{ matrix.platform == 'macos' }}
-        shell: bash
+      - name: Package and verify Windows bundle
+        if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
         run: |
-          echo "Creating macOS DMG for $ARCH using Makefile"
-          make macos-${ARCH}
+          ./build_scripts/package_windows_bundle.ps1
 
+      # iOS 压缩
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
         run: |
           cd build/ios/iphoneos
           zip -r XStream.app.zip Runner.app
 
-      - name: Show distributable build output
-        shell: bash
-        run: |
-          echo "Distributable output for $PLATFORM-$ARCH:"
-          if [[ "$PLATFORM" == "linux" ]]; then
-            find build/linux -type f -executable -exec file {} \; | grep ELF | cut -d: -f1 | tee /tmp/${PLATFORM}-${ARCH}-release.log
-          else
-            find build -type f \( -iname "*.apk" -o -iname "*.dmg" -o -iname "*.exe" -o -iname "*.aab" -o -iname "*.app" \) | tee /tmp/${PLATFORM}-${ARCH}-release.log
-          fi
-
+      # 上传 artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -215,6 +196,7 @@ jobs:
           path: |
             build/macos/*.dmg
             build/linux/x64/release/bundle/xstream-linux.zip
+            build/linux/x64/release/AppImage/xstream-linux.AppImage
             build/windows/x64/runner/Release/xstream-windows.zip
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
@@ -232,23 +214,11 @@ jobs:
           path: release-artifacts
           if-no-artifact-found: ignore
 
-      - name: List all downloaded artifacts
-        run: |
-          echo "Listing contents of release-artifacts"
-          find release-artifacts -type f | tee /tmp/artifacts.list
-          echo "Artifact summary:"
-          cat /tmp/artifacts.list
-
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: daily-${{ github.run_number }}
           name: Daily Build ${{ github.run_number }}
-          files: |
-            release-artifacts/**/*.dmg
-            release-artifacts/**/xstream-linux.zip
-            release-artifacts/**/xstream-windows.zip
-            release-artifacts/**/app-release.apk
-            release-artifacts/**/XStream.app.zip
+          files: release-artifacts/**/*.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

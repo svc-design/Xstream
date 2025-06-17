@@ -231,7 +231,7 @@ class VpnConfig {
           .replaceAll('<UUID>', uuid);
 
       final jsonObj = jsonDecode(replaced);
-      final formatted = JsonEncoder.withIndent('  ').convert(jsonObj);
+        final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
       return formatted;
     } catch (e) {
@@ -283,7 +283,7 @@ class VpnConfig {
     Function(String) logMessage,
   ) async {
     if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || serviceName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
-      final err = 'VPN 节点信息不完整，无法生成 JSON 配置';
+        const err = 'VPN 节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
       return '';
