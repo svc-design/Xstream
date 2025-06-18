@@ -17,6 +17,9 @@ on:
       - '.github/workflows/build-and-release.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -47,7 +50,7 @@ jobs:
           - platform: android
             arch: arm64
 
-    runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-latest","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
+    runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-22.04","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
 
     env:
       PLATFORM: ${{ matrix.platform }}
