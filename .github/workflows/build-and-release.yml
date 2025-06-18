@@ -17,6 +17,9 @@ on:
       - '.github/workflows/build-and-release.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
