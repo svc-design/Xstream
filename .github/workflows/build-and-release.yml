@@ -108,24 +108,7 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Set up MSYS2 and GCC (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: mingw-w64-x86_64-gcc
-          path-type: inherit
-
-      - name: Build Go static library (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        shell: msys2 {0}
-        run: |
-          gcc --version
-          cd windows/go
-          if [ "$(go env CGO_ENABLED)" != "1" ]; then
-            export CGO_ENABLED=1
-          fi
-          go build -buildmode=c-archive -o ../runner/libgo_logic.a
+      # Windows builds rely on prebuilt Go shared libraries.
 
       - name: Show Flutter version
         shell: bash

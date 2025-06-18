@@ -23,12 +23,12 @@ windows/
 └── runner/
     ├── native_bridge_plugin.cpp
     ├── native_bridge_plugin.h
-    └── CMakeLists.txt         # 构建规则，自动生成 libgo_logic.a
+    └── CMakeLists.txt         # 构建规则，可生成 libgo_logic.a
 ```
 
-`nativebridge.go` 使用 `//export` 暴露函数供 C 调用，CMake 会在构建时执行
-`go build -buildmode=c-archive` 生成 `libgo_logic.a` 和对应头文件，随后由
-`NativeBridgePlugin` 链接并通过 `MethodChannel` 与 Dart 层通信。
+`nativebridge.go` 使用 `//export` 暴露函数供 C 调用。仓库已提供预编译的
+`libgo_logic.a` 与头文件，CMake 规则仅在需要重新生成时使用。`NativeBridgePlugin`
+会链接该库并通过 `MethodChannel` 与 Dart 层通信。
 
 插件的注册逻辑节选自 `native_bridge_plugin.cpp`：
 
@@ -61,29 +61,10 @@ add_custom_command(
 )
 ```
 
-## 3. 手动生成 Go 静态库
+## 3. 预编译的 Go 静态库
 
-若需要单独编译 Go 库，可进入 `windows/go` 目录执行：
-
-```powershell
-cd windows/go
-# 确认 CGO 已启用
-go env CGO_ENABLED
-```
-
-若输出不是 `1`，可在当前终端设置并重新构建：
-
-```powershell
-$env:CGO_ENABLED="1"
-```
-
-随后执行构建：
-
-```powershell
-go build -buildmode=c-archive -o libgo_logic.a
-```
-
-成功后会在该目录生成 `libgo_logic.a` 与 `libgo_logic.h`，供 CMake 链接。
+仓库已包含用于 Windows 的 Go 静态库，无需在本地执行 `go build`。
+若遇 CGO 相关问题，可确认已安装 Go 与 MinGW-w64，并根据环境变量启用 CGO。
 
 ## 4. 构建 Flutter 桌面应用
 
@@ -93,7 +74,7 @@ flutter pub get
 flutter build windows
 ```
 
-若环境配置正确，CMake 会在构建过程中自动调用以上 Go 命令生成桥接库。
+若环境配置正确，预编译的库会在构建过程中自动链接，无需执行 Go 命令。
 
 ## 5. 调试模式
 
