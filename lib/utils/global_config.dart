@@ -22,6 +22,9 @@ class GlobalState {
 
   /// 调试模式开关，由 `--debug` 参数控制
   static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
+
+  /// Xray Core 下载状态
+  static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
 }
 
 /// 用于获取应用相关的配置信息

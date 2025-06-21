@@ -15,6 +15,7 @@ char* StartNodeService(const char* name);
 char* StopNodeService(const char* name);
 int32_t CheckNodeStatus(const char* name);
 char* PerformAction(const char* action, const char* password);
+int32_t IsXrayDownloading(void);
 void FreeCString(char* str);
 
 #endif // BRIDGE_H
