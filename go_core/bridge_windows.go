@@ -20,6 +20,11 @@ import (
 var downloadMu sync.Mutex
 var downloading bool
 
+func serviceExists(name string) bool {
+	out, _ := exec.Command("sc", "query", name).CombinedOutput()
+	return strings.Contains(string(out), "SERVICE_NAME")
+}
+
 func cStringOrError(err error) *C.char {
 	if err != nil {
 		return C.CString("error:" + err.Error())
@@ -127,6 +132,24 @@ func downloadAndExtractXray(destDir string) error {
 	return nil
 }
 
+//export CreateWindowsService
+func CreateWindowsService(nameC, execC, configC *C.char) *C.char {
+	name := C.GoString(nameC)
+	execPath := C.GoString(execC)
+	cfg := C.GoString(configC)
+
+	if serviceExists(name) {
+		return C.CString("success")
+	}
+
+	binPath := fmt.Sprintf("\"%s\" run -c \"%s\"", execPath, cfg)
+	out, err := exec.Command("sc", "create", name, "binPath=", binPath, "start=", "auto").CombinedOutput()
+	if err != nil {
+		return C.CString("error:" + string(out))
+	}
+	return C.CString("success")
+}
+
 //export StartNodeService
 func StartNodeService(name *C.char) *C.char {
 	cmd := exec.Command("sc", "start", C.GoString(name))
@@ -155,21 +178,21 @@ func CheckNodeStatus(name *C.char) C.int {
 
 //export PerformAction
 func PerformAction(action, password *C.char) *C.char {
-        switch C.GoString(action) {
-        case "initXray":
-                return InitXray()
-        case "updateXrayCore":
-                return UpdateXrayCore()
-       case "isXrayDownloading":
-               if IsXrayDownloading() == 1 {
-                       return C.CString("1")
-               }
-               return C.CString("0")
-        case "resetXrayAndConfig":
-                return ResetXrayAndConfig(password)
-        default:
-                return C.CString("error:unknown action")
-        }
+	switch C.GoString(action) {
+	case "initXray":
+		return InitXray()
+	case "updateXrayCore":
+		return UpdateXrayCore()
+	case "isXrayDownloading":
+		if IsXrayDownloading() == 1 {
+			return C.CString("1")
+		}
+		return C.CString("0")
+	case "resetXrayAndConfig":
+		return ResetXrayAndConfig(password)
+	default:
+		return C.CString("error:unknown action")
+	}
 }
 
 //export InitXray
@@ -201,35 +224,35 @@ func InitXray() *C.char {
 
 //export UpdateXrayCore
 func UpdateXrayCore() *C.char {
-        destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
-        downloadMu.Lock()
-        defer downloadMu.Unlock()
-        if downloading {
-                return C.CString("info:downloading in background")
-        }
-        downloading = true
-        go func() {
-                defer func() {
-                        downloadMu.Lock()
-                        downloading = false
-                        downloadMu.Unlock()
-                }()
-                if err := downloadAndExtractXray(destDir); err != nil {
-                        fmt.Println("Download failed:", err)
-                }
-        }()
-        return C.CString("info:download started")
+	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
+	downloadMu.Lock()
+	defer downloadMu.Unlock()
+	if downloading {
+		return C.CString("info:downloading in background")
+	}
+	downloading = true
+	go func() {
+		defer func() {
+			downloadMu.Lock()
+			downloading = false
+			downloadMu.Unlock()
+		}()
+		if err := downloadAndExtractXray(destDir); err != nil {
+			fmt.Println("Download failed:", err)
+		}
+	}()
+	return C.CString("info:download started")
 }
 
 //export IsXrayDownloading
 func IsXrayDownloading() C.int {
-       downloadMu.Lock()
-       d := downloading
-       downloadMu.Unlock()
-       if d {
-               return 1
-       }
-       return 0
+	downloadMu.Lock()
+	d := downloading
+	downloadMu.Unlock()
+	if d {
+		return 1
+	}
+	return 0
 }
 
 //export ResetXrayAndConfig

@@ -4,6 +4,11 @@ import 'dart:ffi' as ffi;
 typedef StartNodeServiceNative = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 typedef StartNodeServiceDart = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 
+typedef CreateWindowsServiceNative = ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>);
+typedef CreateWindowsServiceDart = ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>);
+
 typedef StopNodeServiceNative = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 typedef StopNodeServiceDart = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 
@@ -35,6 +40,8 @@ class BridgeBindings {
   BridgeBindings(ffi.DynamicLibrary lib)
       : startNodeService =
             lib.lookupFunction<StartNodeServiceNative, StartNodeServiceDart>('StartNodeService'),
+        createWindowsService =
+            lib.lookupFunction<CreateWindowsServiceNative, CreateWindowsServiceDart>('CreateWindowsService'),
         stopNodeService =
             lib.lookupFunction<StopNodeServiceNative, StopNodeServiceDart>('StopNodeService'),
         writeConfigFiles =
@@ -49,6 +56,7 @@ class BridgeBindings {
             lib.lookupFunction<IsXrayDownloadingNative, IsXrayDownloadingDart>('IsXrayDownloading');
 
   final StartNodeServiceDart startNodeService;
+  final CreateWindowsServiceDart createWindowsService;
   final StopNodeServiceDart stopNodeService;
   final WriteConfigFilesDart writeConfigFiles;
   final CheckNodeStatusDart checkNodeStatus;
