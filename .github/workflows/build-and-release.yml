@@ -225,3 +225,56 @@ jobs:
           files: release-artifacts/**/*.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-stores:
+    runs-on: macos-latest
+    needs: release
+    strategy:
+      matrix:
+        store: [apple, google, microsoft]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          if-no-artifact-found: ignore
+
+      - name: Deploy to Apple App Store
+        if: ${{ matrix.store == 'apple' }}
+        uses: appleboy/app-store-release-action@v1
+        with:
+          api_key: ${{ secrets.APP_STORE_API_KEY }}
+          api_issuer_id: ${{ secrets.APP_STORE_ISSUER_ID }}
+          app_identifier: com.example.xstream
+          ipa_path: release-artifacts/**/*.ipa
+
+      - name: Deploy to Google Play
+        if: ${{ matrix.store == 'google' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.example.xstream
+          releaseFiles: release-artifacts/**/*.apk
+
+      - name: Deploy to Microsoft Store
+        if: ${{ matrix.store == 'microsoft' }}
+        uses: IsaacOjeda/ms-store-release@v1
+        with:
+          tenant_id: ${{ secrets.MS_STORE_TENANT_ID }}
+          client_id: ${{ secrets.MS_STORE_CLIENT_ID }}
+          client_secret: ${{ secrets.MS_STORE_CLIENT_SECRET }}
+          app_id: ${{ secrets.MS_STORE_APP_ID }}
+          package_path: release-artifacts/**/*.msix
+
+      - name: Output test link
+        run: |
+          if [ "${{ matrix.store }}" = "apple" ]; then
+            echo "TestFlight: https://testflight.apple.com/join/example" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ matrix.store }}" = "google" ]; then
+            echo "Google Play Internal: https://play.google.com/apps/testing/com.example.xstream" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Microsoft Store Test: https://www.microsoft.com/store/apps/9NBLGGH4R315" >> "$GITHUB_STEP_SUMMARY"
+          fi
