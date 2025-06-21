@@ -232,6 +232,27 @@ class NativeBridge {
     }
   }
 
+  /// 查询 Xray Core 是否正在下载
+  static Future<bool> isXrayDownloading() async {
+    if (!_isDesktop) return false;
+    if (_useFfi) {
+      final res = _ffi.isXrayDownloading();
+      return res == 1;
+    } else {
+      try {
+        final result = await _channel.invokeMethod<String>(
+          'performAction',
+          {'action': 'isXrayDownloading'},
+        );
+        return result == '1';
+      } on MissingPluginException {
+        return false;
+      } catch (_) {
+        return false;
+      }
+    }
+  }
+
   // 重置配置和 Xray 文件：触发 performAction:resetXrayAndConfig
   static Future<String> resetXrayAndConfig(String password) async {
     if (!_isDesktop) return '当前平台暂不支持';

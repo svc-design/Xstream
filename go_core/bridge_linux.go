@@ -143,23 +143,34 @@ func InitXray() *C.char {
 
 //export UpdateXrayCore
 func UpdateXrayCore() *C.char {
-	downloadMu.Lock()
-	defer downloadMu.Unlock()
-	if downloading {
-		return C.CString("info:downloading in background")
-	}
-	downloading = true
-	go func() {
-		defer func() {
-			downloadMu.Lock()
-			downloading = false
-			downloadMu.Unlock()
-		}()
-		if err := downloadAndInstallXray(); err != nil {
-			fmt.Println("Download failed:", err)
-		}
-	}()
-	return C.CString("info:download started")
+        downloadMu.Lock()
+        defer downloadMu.Unlock()
+        if downloading {
+                return C.CString("info:downloading in background")
+        }
+        downloading = true
+        go func() {
+                defer func() {
+                        downloadMu.Lock()
+                        downloading = false
+                        downloadMu.Unlock()
+                }()
+                if err := downloadAndInstallXray(); err != nil {
+                        fmt.Println("Download failed:", err)
+                }
+        }()
+        return C.CString("info:download started")
+}
+
+//export IsXrayDownloading
+func IsXrayDownloading() C.int {
+       downloadMu.Lock()
+       d := downloading
+       downloadMu.Unlock()
+       if d {
+               return 1
+       }
+       return 0
 }
 
 //export ResetXrayAndConfig

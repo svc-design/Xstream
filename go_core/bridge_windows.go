@@ -155,16 +155,21 @@ func CheckNodeStatus(name *C.char) C.int {
 
 //export PerformAction
 func PerformAction(action, password *C.char) *C.char {
-	switch C.GoString(action) {
-	case "initXray":
-		return InitXray()
-	case "updateXrayCore":
-		return UpdateXrayCore()
-	case "resetXrayAndConfig":
-		return ResetXrayAndConfig(password)
-	default:
-		return C.CString("error:unknown action")
-	}
+        switch C.GoString(action) {
+        case "initXray":
+                return InitXray()
+        case "updateXrayCore":
+                return UpdateXrayCore()
+       case "isXrayDownloading":
+               if IsXrayDownloading() == 1 {
+                       return C.CString("1")
+               }
+               return C.CString("0")
+        case "resetXrayAndConfig":
+                return ResetXrayAndConfig(password)
+        default:
+                return C.CString("error:unknown action")
+        }
 }
 
 //export InitXray
@@ -196,24 +201,35 @@ func InitXray() *C.char {
 
 //export UpdateXrayCore
 func UpdateXrayCore() *C.char {
-	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
-	downloadMu.Lock()
-	defer downloadMu.Unlock()
-	if downloading {
-		return C.CString("info:downloading in background")
-	}
-	downloading = true
-	go func() {
-		defer func() {
-			downloadMu.Lock()
-			downloading = false
-			downloadMu.Unlock()
-		}()
-		if err := downloadAndExtractXray(destDir); err != nil {
-			fmt.Println("Download failed:", err)
-		}
-	}()
-	return C.CString("info:download started")
+        destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
+        downloadMu.Lock()
+        defer downloadMu.Unlock()
+        if downloading {
+                return C.CString("info:downloading in background")
+        }
+        downloading = true
+        go func() {
+                defer func() {
+                        downloadMu.Lock()
+                        downloading = false
+                        downloadMu.Unlock()
+                }()
+                if err := downloadAndExtractXray(destDir); err != nil {
+                        fmt.Println("Download failed:", err)
+                }
+        }()
+        return C.CString("info:download started")
+}
+
+//export IsXrayDownloading
+func IsXrayDownloading() C.int {
+       downloadMu.Lock()
+       d := downloading
+       downloadMu.Unlock()
+       if d {
+               return 1
+       }
+       return 0
 }
 
 //export ResetXrayAndConfig

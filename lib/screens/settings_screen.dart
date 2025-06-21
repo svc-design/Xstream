@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
@@ -16,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTab = 'log';
+  Timer? _xrayMonitorTimer;
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
   static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
@@ -89,9 +91,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final output = await NativeBridge.updateXrayCore();
       logConsoleKey.currentState?.addLog(output);
+      if (output.startsWith('info:')) {
+        GlobalState.xrayUpdating.value = true;
+        _startMonitorXrayProgress();
+      }
     } catch (e) {
       logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
     }
+  }
+
+  void _startMonitorXrayProgress() {
+    _xrayMonitorTimer?.cancel();
+    _xrayMonitorTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      final running = await NativeBridge.isXrayDownloading();
+      GlobalState.xrayUpdating.value = running;
+      if (!running) {
+        _xrayMonitorTimer?.cancel();
+      }
+    });
   }
 
   void _onResetAll() async {
@@ -165,6 +182,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             label: const Text('更新 Xray Core', style: _menuTextStyle),
                             onPressed: isUnlocked ? _onUpdateXray : null,
                           ),
+                        ),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: GlobalState.xrayUpdating,
+                          builder: (context, downloading, _) {
+                            return downloading
+                                ? const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 4),
+                                    child: LinearProgressIndicator(),
+                                  )
+                                : const SizedBox.shrink();
+                          },
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
@@ -266,5 +294,11 @@ This application includes components from:
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _xrayMonitorTimer?.cancel();
+    super.dispose();
   }
 }

@@ -28,6 +28,8 @@ typedef PerformActionDart = ffi.Pointer<ffi.Char> Function(
 
 typedef FreeCStringNative = ffi.Void Function(ffi.Pointer<ffi.Char>);
 typedef FreeCStringDart = void Function(ffi.Pointer<ffi.Char>);
+typedef IsXrayDownloadingNative = ffi.Int32 Function();
+typedef IsXrayDownloadingDart = int Function();
 
 class BridgeBindings {
   BridgeBindings(ffi.DynamicLibrary lib)
@@ -42,7 +44,9 @@ class BridgeBindings {
         performAction =
             lib.lookupFunction<PerformActionNative, PerformActionDart>('PerformAction'),
         freeCString =
-            lib.lookupFunction<FreeCStringNative, FreeCStringDart>('FreeCString');
+            lib.lookupFunction<FreeCStringNative, FreeCStringDart>('FreeCString'),
+        isXrayDownloading =
+            lib.lookupFunction<IsXrayDownloadingNative, IsXrayDownloadingDart>('IsXrayDownloading');
 
   final StartNodeServiceDart startNodeService;
   final StopNodeServiceDart stopNodeService;
@@ -50,4 +54,5 @@ class BridgeBindings {
   final CheckNodeStatusDart checkNodeStatus;
   final PerformActionDart performAction;
   final FreeCStringDart freeCString;
+  final IsXrayDownloadingDart isXrayDownloading;
 }
