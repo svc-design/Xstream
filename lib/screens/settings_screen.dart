@@ -77,6 +77,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _onUpdateXray() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以更新 Xray', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始更新 Xray Core...');
+    try {
+      final output = await NativeBridge.updateXrayCore();
+      logConsoleKey.currentState?.addLog(output);
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
+    }
+  }
+
   void _onResetAll() async {
     final isUnlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
@@ -137,6 +154,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             icon: const Icon(Icons.build),
                             label: const Text('初始化 Xray', style: _menuTextStyle),
                             onPressed: isUnlocked ? _onInitXray : null,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.update),
+                            label: const Text('更新 Xray Core', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onUpdateXray : null,
                           ),
                         ),
                         const SizedBox(height: 8),

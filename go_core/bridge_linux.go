@@ -14,7 +14,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 )
+
+var downloadMu sync.Mutex
+var downloading bool
 
 func runCommand(cmd string) (string, error) {
 	c := exec.Command("bash", "-c", cmd)
@@ -66,6 +70,15 @@ func WriteConfigFiles(xrayPathC, xrayContentC, servicePathC, serviceContentC, vp
 	return C.CString("success")
 }
 
+func downloadAndInstallXray() error {
+	cmd := "curl -L https://artifact.onwalk.net/xray-core/v25.3.6/Xray-linux-64.zip -o Xray-linux-64.zip && " +
+		"mkdir -pv /opt/bin/ && " +
+		"unzip -o Xray-linux-64.zip && " +
+		"cp Xray-linux-64/xray /opt/bin/xray && chmod +x /opt/bin/xray"
+	_, err := runCommand(cmd)
+	return err
+}
+
 //export StartNodeService
 func StartNodeService(serviceC *C.char) *C.char {
 	service := C.GoString(serviceC)
@@ -104,15 +117,49 @@ func CheckNodeStatus(serviceC *C.char) C.int {
 
 //export InitXray
 func InitXray() *C.char {
-	cmd := "curl -L https://artifact.onwalk.net/xray-core/v25.3.6/Xray-linux-64.zip -o Xray-linux-64.zip && " +
-		"mkdir -pv /opt/bin/ && " +
-		"unzip -o Xray-linux-64.zip && " +
-		"cp Xray-linux-64/xray /opt/bin/xray && chmod +x /opt/bin/xray"
-	out, err := runCommand(cmd)
-	if err != nil {
-		return C.CString("error:" + out)
+	dest := "/opt/bin/xray"
+	if _, err := os.Stat(dest); err == nil {
+		return C.CString("success")
 	}
-	return C.CString("success")
+
+	downloadMu.Lock()
+	defer downloadMu.Unlock()
+	if downloading {
+		return C.CString("info:downloading in background")
+	}
+	downloading = true
+	go func() {
+		defer func() {
+			downloadMu.Lock()
+			downloading = false
+			downloadMu.Unlock()
+		}()
+		if err := downloadAndInstallXray(); err != nil {
+			fmt.Println("Download failed:", err)
+		}
+	}()
+	return C.CString("info:download started")
+}
+
+//export UpdateXrayCore
+func UpdateXrayCore() *C.char {
+	downloadMu.Lock()
+	defer downloadMu.Unlock()
+	if downloading {
+		return C.CString("info:downloading in background")
+	}
+	downloading = true
+	go func() {
+		defer func() {
+			downloadMu.Lock()
+			downloading = false
+			downloadMu.Unlock()
+		}()
+		if err := downloadAndInstallXray(); err != nil {
+			fmt.Println("Download failed:", err)
+		}
+	}()
+	return C.CString("info:download started")
 }
 
 //export ResetXrayAndConfig

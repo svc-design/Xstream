@@ -14,6 +14,8 @@ extension AppDelegate {
     switch action {
     case "initXray":
       self.runInitXray(bundleId: bundleId, result: result)
+    case "updateXrayCore":
+      self.runInitXray(bundleId: bundleId, result: result)
     case "resetXrayAndConfig":
       guard let password = args["password"] as? String else {
         result(FlutterError(code: "MISSING_PASSWORD", message: "缺少密码", details: nil))
