@@ -231,33 +231,39 @@ jobs:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          rsync -av release-artifacts/**/build/macos/*.dmg root@"$VPS_HOST":/mnt/data/update-server/xstream-macos-latest/ --delete
+          DMG_FILE=$(find release-artifacts -name '*.dmg' | head -n 1)
+          rsync -av "$DMG_FILE" root@"$VPS_HOST":/mnt/data/update-server/xstream-macos-latest/xstream-macos-latest.dmg --delete
 
       - name: \ud83d\udce4 Deploy Linux bundle to update server
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          rsync -av release-artifacts/**/build/linux/x64/release/bundle/xstream-linux.zip root@"$VPS_HOST":/mnt/data/update-server/xstream-linux-latest/ --delete
+          LINUX_ZIP=$(find release-artifacts -name 'xstream-linux.zip' | head -n 1)
+          rsync -av "$LINUX_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-linux-latest/xstream-linux-latest.zip --delete
 
       - name: \ud83d\udce4 Deploy Windows bundle to update server
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          rsync -av release-artifacts/**/build/windows/x64/runner/Release/xstream-windows.zip root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/ --delete
+          WIN_ZIP=$(find release-artifacts -name 'xstream-windows.zip' | head -n 1)
+          rsync -av "$WIN_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.zip --delete
 
   publish-stores:
     runs-on: macos-latest
