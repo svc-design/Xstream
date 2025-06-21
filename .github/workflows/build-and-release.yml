@@ -226,7 +226,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: \ud83d\udce4 Deploy macOS DMG to update server
+      - name: Publish macOS DMG to update server
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -239,7 +239,7 @@ jobs:
           DMG_FILE=$(find release-artifacts -name '*.dmg' | head -n 1)
           rsync -av "$DMG_FILE" root@"$VPS_HOST":/mnt/data/update-server/xstream-macos-latest/xstream-macos-latest.dmg --delete
 
-      - name: \ud83d\udce4 Deploy Linux bundle to update server
+      - name: Publish Linux bundle to update server
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -252,7 +252,7 @@ jobs:
           LINUX_ZIP=$(find release-artifacts -name 'xstream-linux.zip' | head -n 1)
           rsync -av "$LINUX_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-linux-latest/xstream-linux-latest.zip --delete
 
-      - name: \ud83d\udce4 Deploy Windows bundle to update server
+      - name: Publish Windows bundle to update server
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
