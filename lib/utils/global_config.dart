@@ -39,7 +39,7 @@ class GlobalApplicationConfig {
   static String get xrayExePath {
     switch (Platform.operatingSystem) {
       case 'windows':
-        return '${windowsBasePath}\\xray.exe';
+        return '$windowsBasePath\\xray.exe';
       case 'linux':
         final home = Platform.environment['HOME'] ?? '~';
         return '$home/.local/bin/xray';
