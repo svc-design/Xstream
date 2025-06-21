@@ -29,6 +29,24 @@ class GlobalState {
 
 /// 用于获取应用相关的配置信息
 class GlobalApplicationConfig {
+  /// Windows 平台默认安装目录
+  static String get windowsBasePath {
+    final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+    return '$base\\Xstream';
+  }
+
+  /// Xray 可执行文件路径
+  static String get xrayExePath {
+    switch (Platform.operatingSystem) {
+      case 'windows':
+        return '${windowsBasePath}\\xray.exe';
+      case 'linux':
+        final home = Platform.environment['HOME'] ?? '~';
+        return '$home/.local/bin/xray';
+      default:
+        return '/usr/local/bin/xray';
+    }
+  }
   /// 从配置文件或默认值中获取 PRODUCT_BUNDLE_IDENTIFIER
   static Future<String> getBundleId() async {
     if (Platform.isMacOS) {
@@ -55,8 +73,8 @@ class GlobalApplicationConfig {
       case 'macos':
         return '/opt/homebrew/etc/';
       case 'windows':
-        final base = Platform.environment['ProgramData'] ?? 'C:\\ProgramData';
-        return '$base\\xstream\\';
+        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+        return '$base\\Xstream\\';
       case 'linux':
         return '/opt/etc/';
       default:
@@ -75,9 +93,9 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}/vpn_nodes.json';
 
       case 'windows':
-        final base = Platform.environment['ProgramData'] ??
+        final base = Platform.environment['ProgramFiles'] ??
             (await getApplicationSupportDirectory()).path;
-        final xstreamDir = Directory('$base\\xstream');
+        final xstreamDir = Directory('$base\\Xstream');
         await xstreamDir.create(recursive: true);
         return '${xstreamDir.path}\\vpn_nodes.json';
 
@@ -105,8 +123,8 @@ class GlobalApplicationConfig {
       case 'linux':
         return '/etc/systemd/system/$serviceName';
       case 'windows':
-        final base = Platform.environment['ProgramData'] ?? 'C:\\ProgramData';
-        return '$base\\xstream\\$serviceName';
+        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+        return '$base\\Xstream\\$serviceName';
       default:
         return serviceName;
     }
