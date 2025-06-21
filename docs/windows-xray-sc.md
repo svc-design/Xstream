@@ -4,15 +4,15 @@
 
 ## 准备工作
 
-1. 确保 `xray.exe` 已复制到 `C:\ProgramData\xstream` 目录。可以在 XStream 应用中执行 `InitXray` 操作，或手动将文件放置到该目录。
-2. 准备好 Xray 配置文件，例如 `C:\ProgramData\xstream\xray-config.json`。
+1. 确保 `xray.exe` 已复制到 `C:\Program Files\Xstream` 目录。可以在 XStream 应用中执行 `InitXray` 操作，或手动将文件放置到该目录。
+2. 准备好 Xray 配置文件，例如 `C:\Program Files\Xstream\xray-config.json`。
 
 ## 创建服务
 
 以管理员身份打开 PowerShell 或命令提示符，执行以下命令注册服务并设置开机自启：
 
 ```powershell
-sc create xray-core binPath= "C:\ProgramData\xstream\xray.exe run -c C:\ProgramData\xstream\xray-config.json" start= auto
+sc create xray-core binPath= "C:\Program Files\Xstream\xray.exe run -c C:\Program Files\Xstream\xray-config.json" start= auto
 ```
 
 - `xray-core` 为服务名称，可根据需要修改。

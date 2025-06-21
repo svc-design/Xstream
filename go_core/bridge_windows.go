@@ -197,7 +197,7 @@ func PerformAction(action, password *C.char) *C.char {
 
 //export InitXray
 func InitXray() *C.char {
-	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
+	destDir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	dest := filepath.Join(destDir, "xray.exe")
 	if _, err := os.Stat(dest); err == nil {
 		return C.CString("success")
@@ -224,7 +224,7 @@ func InitXray() *C.char {
 
 //export UpdateXrayCore
 func UpdateXrayCore() *C.char {
-	destDir := filepath.Join(os.Getenv("ProgramData"), "xstream")
+	destDir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	downloadMu.Lock()
 	defer downloadMu.Unlock()
 	if downloading {
@@ -257,7 +257,7 @@ func IsXrayDownloading() C.int {
 
 //export ResetXrayAndConfig
 func ResetXrayAndConfig(password *C.char) *C.char {
-	dir := filepath.Join(os.Getenv("ProgramData"), "xstream")
+	dir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	os.RemoveAll(dir)
 	exec.Command("sc", "delete", "xray-node-jp").Run()
 	exec.Command("sc", "delete", "xray-node-ca").Run()

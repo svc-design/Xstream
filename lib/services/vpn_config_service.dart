@@ -259,7 +259,7 @@ class VpnConfig {
             configPath: configPath,
           );
         case 'windows':
-          const xrayPath = r'C:\\ProgramData\\xstream\\xray.exe';
+          final xrayPath = GlobalApplicationConfig.xrayExePath;
           final serviceName = 'xray-node-${nodeCode.toLowerCase()}';
           return renderXrayServiceWindows(
             serviceName: serviceName,
