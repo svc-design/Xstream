@@ -194,6 +194,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        platform:
+          - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
+          - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
+          - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
+          - { name: github, file_pattern: '**/*', remote_path: '' }
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -204,7 +212,8 @@ jobs:
           path: release-artifacts
           if-no-artifact-found: ignore
 
-      - name: Publish GitHub Release
+      - name: Upload to GitHub Release
+        if: matrix.platform.name == 'github'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: daily-${{ github.run_number }}
@@ -212,28 +221,9 @@ jobs:
           files: release-artifacts/**/*.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-to-update-server:
-    runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      matrix:
-        platform:
-          - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
-          - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
-          - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          if-no-artifact-found: ignore
-
+          
       - name: Upload ${{ matrix.platform.name }} bundle via rsync
+        if: matrix.platform.name != 'github'
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
