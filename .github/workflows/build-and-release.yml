@@ -204,117 +204,108 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
 
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+release:
+  runs-on: ubuntu-latest
+  needs: build
+  steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          if-no-artifact-found: ignore
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-artifacts
+        if-no-artifact-found: ignore
 
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: daily-${{ github.run_number }}
-          name: Daily Build ${{ github.run_number }}
-          files: release-artifacts/**/*.*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Publish GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: daily-${{ github.run_number }}
+        name: Daily Build ${{ github.run_number }}
+        files: release-artifacts/**/*.*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish macOS DMG to update server
-        env:
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          DMG_FILE=$(find release-artifacts -name '*.dmg' | head -n 1)
-          rsync -av "$DMG_FILE" root@"$VPS_HOST":/mnt/data/update-server/xstream-macos-latest/xstream-macos-latest.dmg --delete
+publish-to-update-server:
+  runs-on: ubuntu-latest
+  needs: build  # ✅ 与 release 并行执行
+  strategy:
+    matrix:
+      platform:
+        - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
+        - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
+        - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
 
-      - name: Publish Linux bundle to update server
-        env:
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          LINUX_ZIP=$(find release-artifacts -name 'xstream-linux.zip' | head -n 1)
-          rsync -av "$LINUX_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-linux-latest/xstream-linux-latest.zip --delete
+  steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
 
-      - name: Publish Windows bundle to update server
-        env:
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          WIN_ZIP=$(find release-artifacts -name 'xstream-windows.zip' | head -n 1)
-          rsync -av "$WIN_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.zip --delete
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-artifacts
+        if-no-artifact-found: ignore
 
-  publish-stores:
-    runs-on: macos-latest
-    needs: release
-    strategy:
-      matrix:
-        store: [apple, google, microsoft]
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+    - name: Upload ${{ matrix.platform.name }} bundle via rsync
+      env:
+        RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+      run: |
+        set -e
+        mkdir -p ~/.ssh
+        echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          if-no-artifact-found: ignore
+        FILE=$(find release-artifacts -name '${{ matrix.platform.file_pattern }}' | head -n 1)
+        echo "Uploading $FILE to /mnt/data/update-server/${{ matrix.platform.remote_path }}"
+        rsync -av "$FILE" root@"$VPS_HOST":/mnt/data/update-server/${{ matrix.platform.remote_path }} --delete
 
-      - name: Deploy to Apple App Store
-        if: ${{ matrix.store == 'apple' }}
-        uses: maierj/fastlane-action@v3.1.0
-        with:
-          lane: 'appstore'
-          api_key: ${{ secrets.APP_STORE_API_KEY }}
-          api_issuer_id: ${{ secrets.APP_STORE_ISSUER_ID }}
-          ipa_path: release-artifacts/**/*.ipa
+publish-stores:
+  runs-on: ubuntu-latest
+  needs: release
+  strategy:
+    matrix:
+      store: [apple, google, microsoft]
+  env:
+    PUBLISH_APPLE: false
+    PUBLISH_GOOGLE: false
+    PUBLISH_MICROSOFT: false
+    
+  steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
 
-      - name: Deploy to Google Play
-        if: ${{ matrix.store == 'google' }}
-        uses: r0adkll/upload-google-play@v1.1.3
-        with:
-          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.example.xstream
-          releaseFiles: release-artifacts/**/*.apk
+    - name: Download release artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-artifacts
+        if-no-artifact-found: ignore
 
-      - name: Deploy to Microsoft Store
-        if: ${{ matrix.store == 'microsoft' }}
-        uses: actions-marketplace-validations/trympet_microsoft-store-flight-action@main
-        with:
-          tenant-id: ${{ secrets.MS_STORE_TENANT_ID }}
-          client-id: ${{ secrets.MS_STORE_CLIENT_ID }}
-          client-secret: ${{ secrets.MS_STORE_CLIENT_SECRET }}
-          app-id: ${{ secrets.MS_STORE_APP_ID }}
-          flight-id: 'default'
-          package-path: release-artifacts/**/*.msix
+    - name: Deploy to Apple App Store
+      if: matrix.store == 'apple' && env.PUBLISH_APPLE == 'true'
+      uses: maierj/fastlane-action@v3.1.0
+      with:
+        lane: 'appstore'
+        api_key: ${{ secrets.APP_STORE_API_KEY }}
+        api_issuer_id: ${{ secrets.APP_STORE_ISSUER_ID }}
+        ipa_path: release-artifacts/**/*.ipa
 
-      - name: Output test link
-        run: |
-          if [ "${{ matrix.store }}" = "apple" ]; then
-            echo "TestFlight: https://testflight.apple.com/join/example" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ matrix.store }}" = "google" ]; then
-            echo "Google Play Internal: https://play.google.com/apps/testing/com.example.xstream" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Microsoft Store Test: https://www.microsoft.com/store/apps/9NBLGGH4R315" >> "$GITHUB_STEP_SUMMARY"
-          fi
+    - name: Deploy to Google Play
+      if: matrix.store == 'google' && env.PUBLISH_GOOGLE == 'true'
+      uses: r0adkll/upload-google-play@v1.1.3
+      with:
+        serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        packageName: com.example.xstream
+        releaseFiles: release-artifacts/**/*.apk
+
+    - name: Deploy to Microsoft Store
+      if: matrix.store == 'microsoft' && env.PUBLISH_MICROSOFT == 'true'
+      uses: actions-marketplace-validations/trympet_microsoft-store-flight-action@main
+      with:
+        tenant-id: ${{ secrets.MS_STORE_TENANT_ID }}
+        client-id: ${{ secrets.MS_STORE_CLIENT_ID }}
+        client-secret: ${{ secrets.MS_STORE_CLIENT_SECRET }}
+        app-id: ${{ secrets.MS_STORE_APP_ID }}
+        flight-id: 'default'
+        package-path: release-artifacts/**/*.msix
