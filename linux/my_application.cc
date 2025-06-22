@@ -74,10 +74,13 @@ static void my_application_activate(GApplication* application) {
   gchar* icon_path = g_build_filename(g_get_current_dir(),
                                       "data/flutter_assets/assets/logo.png",
                                       NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   self->tray_icon = gtk_status_icon_new_from_file(icon_path);
-  g_free(icon_path);
   g_signal_connect(self->tray_icon, "activate", G_CALLBACK(tray_icon_activate), self);
   gtk_status_icon_set_visible(self->tray_icon, TRUE);
+#pragma GCC diagnostic pop
+  g_free(icon_path);
   g_signal_connect(window, "window-state-event", G_CALLBACK(window_state_event), NULL);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
