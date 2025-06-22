@@ -5,13 +5,15 @@ package main
 /*
 #cgo LDFLAGS: -lX11
 #include <stdlib.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <X11/Xutil.h>
 
-Display* disp = NULL;
-Window mainWin = 0;
+static Display* disp = NULL;
+static Window mainWin = 0;
 
-Window findWindow(const char* name) {
+static Window findWindow(const char* name) {
     if (disp == NULL) {
         disp = XOpenDisplay(NULL);
         if (disp == NULL) return 0;
@@ -40,7 +42,7 @@ Window findWindow(const char* name) {
     return 0;
 }
 
-int isIconic() {
+static int isIconic() {
     if (!disp || mainWin==0) return 0;
     Atom WM_STATE = XInternAtom(disp, "WM_STATE", True);
     Atom type; int format; unsigned long items, bytes; unsigned char* prop=NULL;
@@ -52,11 +54,11 @@ int isIconic() {
     return 0;
 }
 
-void hideWindow() {
+static void hideWindow() {
     if (disp && mainWin) { XUnmapWindow(disp, mainWin); XFlush(disp); }
 }
 
-void showWindow() {
+static void showWindow() {
     if (disp && mainWin) { XMapRaised(disp, mainWin); XFlush(disp); }
 }
 */
