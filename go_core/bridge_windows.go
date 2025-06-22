@@ -161,7 +161,10 @@ func StartNodeService(name *C.char) *C.char {
 	serviceName := C.GoString(name)
 	programDir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	xrayPath := filepath.Join(programDir, "xray.exe")
-	targetConfig := filepath.Join(programDir, serviceName+".json")
+	baseName := strings.TrimSuffix(serviceName, ".schtasks")
+	parts := strings.Split(baseName, "-")
+	code := parts[len(parts)-1]
+	targetConfig := filepath.Join(programDir, fmt.Sprintf("xray-vpn-node-%s.json", code))
 	configJson := filepath.Join(programDir, "config.json")
 
 	// 复制节点配置为统一 config.json
@@ -294,9 +297,9 @@ func IsXrayDownloading() C.int {
 func ResetXrayAndConfig(password *C.char) *C.char {
 	dir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	os.RemoveAll(dir)
-	exec.Command("schtasks", "/Delete", "/TN", "xray-node-jp", "/F").Run()
-	exec.Command("schtasks", "/Delete", "/TN", "xray-node-ca", "/F").Run()
-	exec.Command("schtasks", "/Delete", "/TN", "xray-node-us", "/F").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "ray-node-jp.schtasks", "/F").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "ray-node-ca.schtasks", "/F").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "ray-node-us.schtasks", "/F").Run()
 	return C.CString("success")
 }
 

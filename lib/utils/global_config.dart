@@ -114,6 +114,22 @@ class GlobalApplicationConfig {
     }
   }
 
+  /// 根据 region 生成各平台的启动控制文件或任务名称
+  static Future<String> serviceNameForRegion(String region) async {
+    final code = region.toLowerCase();
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final bundleId = await getBundleId();
+        return '$bundleId.xray-node-$code.plist';
+      case 'linux':
+        return 'xray-node-$code.service';
+      case 'windows':
+        return 'ray-node-$code.schtasks';
+      default:
+        return 'xray-node-$code';
+    }
+  }
+
   /// 根据平台和服务名称返回服务配置文件路径
   static String servicePath(String serviceName) {
     switch (Platform.operatingSystem) {

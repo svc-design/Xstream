@@ -186,10 +186,15 @@ class VpnConfig {
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
-    final serviceName = '$bundleId.xray-node-$code.plist';
+    final serviceName = await GlobalApplicationConfig.serviceNameForRegion(code);
     final servicePath = GlobalApplicationConfig.servicePath(serviceName);
 
-    final serviceContent = _generateServiceContent(code, bundleId, xrayConfigPath);
+    final serviceContent = _generateServiceContent(
+      code,
+      bundleId,
+      xrayConfigPath,
+      serviceName,
+    );
     if (serviceContent.isEmpty) return;
 
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
@@ -242,7 +247,7 @@ class VpnConfig {
   }
 
   static String _generateServiceContent(
-      String nodeCode, String bundleId, String configPath) {
+      String nodeCode, String bundleId, String configPath, String serviceName) {
     try {
       switch (Platform.operatingSystem) {
         case 'macos':
@@ -260,9 +265,8 @@ class VpnConfig {
           );
         case 'windows':
           final xrayPath = GlobalApplicationConfig.xrayExePath;
-          final serviceName = 'xray-node-${nodeCode.toLowerCase()}';
           return renderXrayServiceWindows(
-            serviceName: serviceName,
+            serviceName: serviceName.replaceAll('.schtasks', ''),
             xrayPath: xrayPath,
             configPath: configPath,
           );
