@@ -27,8 +27,8 @@ var downloading bool
 var processMap sync.Map
 
 func serviceExists(name string) bool {
-	out, _ := exec.Command("sc", "query", name).CombinedOutput()
-	return strings.Contains(string(out), "SERVICE_NAME")
+	err := exec.Command("schtasks", "/Query", "/TN", name).Run()
+	return err == nil
 }
 
 func cStringOrError(err error) *C.char {
@@ -148,8 +148,8 @@ func CreateWindowsService(nameC, execC, configC *C.char) *C.char {
 		return C.CString("success")
 	}
 
-	binPath := fmt.Sprintf("\"%s\" run -c \"%s\"", execPath, cfg)
-	out, err := exec.Command("sc", "create", name, "binPath=", binPath, "start=", "auto").CombinedOutput()
+	taskCmd := fmt.Sprintf("\"%s\" run -c \"%s\"", execPath, cfg)
+	out, err := exec.Command("schtasks", "/Create", "/TN", name, "/SC", "ONSTART", "/RL", "HIGHEST", "/TR", taskCmd, "/F").CombinedOutput()
 	if err != nil {
 		return C.CString("error:" + string(out))
 	}
@@ -164,7 +164,7 @@ func StartNodeService(name *C.char) *C.char {
 	targetConfig := filepath.Join(programDir, serviceName+".json")
 	configJson := filepath.Join(programDir, "config.json")
 
-	// 强制复制 config.json ← service-specific json
+	// 复制节点配置为统一 config.json
 	input, err := os.ReadFile(targetConfig)
 	if err != nil {
 		return C.CString("error: read " + targetConfig + " failed: " + err.Error())
@@ -173,18 +173,18 @@ func StartNodeService(name *C.char) *C.char {
 		return C.CString("error: write config.json failed: " + err.Error())
 	}
 
-	// 后台运行 xray.exe run -c config.json
-	cmd := exec.Command(xrayPath, "run", "-c", configJson)
-	cmd.SysProcAttr = &windows.SysProcAttr{
-		HideWindow:    true, // 避免弹出窗口
-		CreationFlags: windows.CREATE_NEW_PROCESS_GROUP,
-	}
-	if err := cmd.Start(); err != nil {
-		return C.CString("error: xray start failed: " + err.Error())
+	// 若任务不存在则创建
+	if err := exec.Command("schtasks", "/Query", "/TN", serviceName).Run(); err != nil {
+		taskCmd := fmt.Sprintf("\"%s\" run -c \"%s\"", xrayPath, configJson)
+		if out, err := exec.Command("schtasks", "/Create", "/TN", serviceName, "/SC", "ONSTART", "/RL", "HIGHEST", "/TR", taskCmd, "/F").CombinedOutput(); err != nil {
+			return C.CString("error:" + string(out))
+		}
 	}
 
-	// 成功启动
-	processMap.Store(serviceName, cmd)
+	// 立即运行任务
+	if out, err := exec.Command("schtasks", "/Run", "/TN", serviceName).CombinedOutput(); err != nil {
+		return C.CString("error:" + string(out))
+	}
 	return C.CString("success")
 }
 
@@ -192,29 +192,20 @@ func StartNodeService(name *C.char) *C.char {
 func StopNodeService(name *C.char) *C.char {
 	serviceName := C.GoString(name)
 
-	// 精准结束进程
-	if val, ok := processMap.Load(serviceName); ok {
-		if cmd, ok := val.(*exec.Cmd); ok && cmd.Process != nil {
-			if err := cmd.Process.Kill(); err != nil {
-				return C.CString("error: kill failed: " + err.Error())
-			}
-			processMap.Delete(serviceName)
-			return C.CString("success")
-		}
-	}
-
-	// 兜底杀掉全部 xray.exe
+	exec.Command("schtasks", "/End", "/TN", serviceName).Run()
+	exec.Command("schtasks", "/Delete", "/TN", serviceName, "/F").Run()
 	exec.Command("taskkill", "/F", "/IM", "xray.exe").Run()
 	return C.CString("success")
 }
 
 //export CheckNodeStatus
 func CheckNodeStatus(name *C.char) C.int {
-	out, err := exec.Command("sc", "query", C.GoString(name)).Output()
+	out, err := exec.Command("schtasks", "/Query", "/TN", C.GoString(name)).CombinedOutput()
 	if err != nil {
 		return -1
 	}
-	if strings.Contains(string(out), "RUNNING") {
+	str := strings.ToLower(string(out))
+	if strings.Contains(str, "running") || strings.Contains(str, "\xe6\xad\xa3\xe5\x9c\xa8\xe8\xbf\x90\xe8\xa1\x8c") {
 		return 1
 	}
 	return 0
@@ -303,9 +294,9 @@ func IsXrayDownloading() C.int {
 func ResetXrayAndConfig(password *C.char) *C.char {
 	dir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
 	os.RemoveAll(dir)
-	exec.Command("sc", "delete", "xray-node-jp").Run()
-	exec.Command("sc", "delete", "xray-node-ca").Run()
-	exec.Command("sc", "delete", "xray-node-us").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "xray-node-jp", "/F").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "xray-node-ca", "/F").Run()
+	exec.Command("schtasks", "/Delete", "/TN", "xray-node-us", "/F").Run()
 	return C.CString("success")
 }
 
