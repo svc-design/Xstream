@@ -13,6 +13,10 @@ package main
 static Display* disp = NULL;
 static Window mainWin = 0;
 
+static Window getMainWin() {
+    return mainWin;
+}
+
 static Window findWindow(const char* name) {
     if (disp == NULL) {
         disp = XOpenDisplay(NULL);
@@ -253,12 +257,12 @@ var trayOnce sync.Once
 
 func monitorMinimize() {
 	for {
-		if C.mainWin == 0 {
+		if C.getMainWin() == 0 {
 			cname := C.CString("xstream")
 			C.findWindow(cname)
 			C.free(unsafe.Pointer(cname))
 		}
-		if C.mainWin != 0 {
+		if C.getMainWin() != 0 {
 			if C.isIconic() != 0 {
 				C.hideWindow()
 			}
@@ -283,12 +287,12 @@ func InitTray() {
 					for {
 						select {
 						case <-mShow.ClickedCh:
-							if C.mainWin == 0 {
+							if C.getMainWin() == 0 {
 								cname := C.CString("xstream")
 								C.findWindow(cname)
 								C.free(unsafe.Pointer(cname))
 							}
-							if C.mainWin != 0 {
+							if C.getMainWin() != 0 {
 								C.showWindow()
 							}
 						case <-mQuit.ClickedCh:
