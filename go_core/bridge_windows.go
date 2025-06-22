@@ -8,14 +8,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/getlantern/systray"
+	"golang.org/x/sys/windows"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
-	"syscall"
+	"time"
+	"unsafe"
 )
 
 var downloadMu sync.Mutex
@@ -171,9 +175,9 @@ func StartNodeService(name *C.char) *C.char {
 
 	// 后台运行 xray.exe run -c config.json
 	cmd := exec.Command(xrayPath, "run", "-c", configJson)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
+	cmd.SysProcAttr = &windows.SysProcAttr{
 		HideWindow:    true, // 避免弹出窗口
-		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
+		CreationFlags: windows.CREATE_NEW_PROCESS_GROUP,
 	}
 	if err := cmd.Start(); err != nil {
 		return C.CString("error: xray start failed: " + err.Error())
@@ -303,4 +307,108 @@ func ResetXrayAndConfig(password *C.char) *C.char {
 	exec.Command("sc", "delete", "xray-node-ca").Run()
 	exec.Command("sc", "delete", "xray-node-us").Run()
 	return C.CString("success")
+}
+
+// ---- System tray integration ----
+
+var trayOnce sync.Once
+var windowHandle windows.Handle
+
+var (
+	user32                  = windows.NewLazySystemDLL("user32.dll")
+	procFindWindowW         = user32.NewProc("FindWindowW")
+	procShowWindow          = user32.NewProc("ShowWindow")
+	procGetWindowPlacement  = user32.NewProc("GetWindowPlacement")
+	procSetForegroundWindow = user32.NewProc("SetForegroundWindow")
+)
+
+type point struct {
+	X int32
+	Y int32
+}
+
+type rect struct {
+	Left   int32
+	Top    int32
+	Right  int32
+	Bottom int32
+}
+
+type windowPlacement struct {
+	Length         uint32
+	Flags          uint32
+	ShowCmd        uint32
+	MinPosition    point
+	MaxPosition    point
+	NormalPosition rect
+}
+
+func findMainWindow() windows.Handle {
+	title, _ := windows.UTF16PtrFromString("xstream")
+	h, _, _ := procFindWindowW.Call(0, uintptr(unsafe.Pointer(title)))
+	return windows.Handle(h)
+}
+
+func showWindow(h windows.Handle, cmd int32) {
+	procShowWindow.Call(uintptr(h), uintptr(cmd))
+}
+
+func getPlacement(h windows.Handle, wp *windowPlacement) bool {
+	r, _, _ := procGetWindowPlacement.Call(uintptr(h), uintptr(unsafe.Pointer(wp)))
+	return r != 0
+}
+
+func monitorMinimize() {
+	for {
+		if windowHandle == 0 {
+			windowHandle = findMainWindow()
+		}
+		if windowHandle != 0 {
+			var wp windowPlacement
+			wp.Length = uint32(unsafe.Sizeof(wp))
+			if getPlacement(windowHandle, &wp) {
+				if wp.ShowCmd == windows.SW_SHOWMINIMIZED {
+					showWindow(windowHandle, windows.SW_HIDE)
+				}
+			}
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+func onTrayReady() {
+	icon, err := os.ReadFile("data/flutter_assets/assets/logo.png")
+	if err == nil {
+		systray.SetIcon(icon)
+	}
+	mShow := systray.AddMenuItem("Show", "Show window")
+	mQuit := systray.AddMenuItem("Quit", "Quit")
+	go func() {
+		for {
+			select {
+			case <-mShow.ClickedCh:
+				if windowHandle == 0 {
+					windowHandle = findMainWindow()
+				}
+				if windowHandle != 0 {
+					showWindow(windowHandle, windows.SW_RESTORE)
+					procSetForegroundWindow.Call(uintptr(windowHandle))
+				}
+			case <-mQuit.ClickedCh:
+				systray.Quit()
+				return
+			}
+		}
+	}()
+	go monitorMinimize()
+}
+
+//export InitTray
+func InitTray() {
+	trayOnce.Do(func() {
+		go func() {
+			runtime.LockOSThread()
+			systray.Run(onTrayReady, func() {})
+		}()
+	})
 }

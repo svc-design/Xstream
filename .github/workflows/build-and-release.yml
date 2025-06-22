@@ -66,7 +66,7 @@ jobs:
         run: |
           if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
             sudo apt-get update
-            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
+            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev libayatana-appindicator3-dev
             mkdir -p $HOME/flutter
             curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
             tar xf flutter_linux_3.22.2-stable.tar.xz -C $HOME/flutter --strip-components=1
@@ -154,7 +154,7 @@ jobs:
       - name: Build Linux App
         if: ${{ matrix.platform == 'linux' }}
         shell: bash
-        run: flutter build linux --release
+        run: flutter build linux --release -v
 
       - name: Package and verify Linux bundle
         if: ${{ matrix.platform == 'linux' }}

@@ -14,6 +14,7 @@
 - 实时日志输出与故障诊断
 - 支持 macOS 权限验证与服务管理
 - 解耦式界面设计，支持跨平台构建
+- Windows/Linux 版本最小化时自动隐藏到系统托盘（右下角）
 
 ---
 
@@ -69,6 +70,7 @@ flutter build linux --release -v
 ，否则可能出现 `pthread_*` 相关链接错误。
 
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
+此外，系统托盘功能依赖 `libayatana-appindicator3-dev`（旧发行版可安装 `libappindicator3-dev`）。若缺失该库，`go build` 会因 `pkg-config` 找不到 `ayatana-appindicator3-0.1` 而报错。
 
 ## 🪟 Windows 构建须知
 

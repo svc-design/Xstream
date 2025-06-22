@@ -5,6 +5,12 @@ set -e
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$DIR/go_core"
 
+# 检查托盘依赖
+if ! pkg-config --exists ayatana-appindicator3-0.1 2>/dev/null; then
+  echo "Missing libayatana-appindicator3-dev (or libappindicator3-dev)" >&2
+  echo "Install it via your package manager to enable tray support" >&2
+fi
+
 # 默认目标架构
 GOOS=linux
 GOARCH=amd64

@@ -3,7 +3,68 @@
 package main
 
 /*
+#cgo LDFLAGS: -lX11
 #include <stdlib.h>
+#include <string.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+
+static Display* disp = NULL;
+static Window mainWin = 0;
+
+static Window getMainWin() {
+    return mainWin;
+}
+
+static Window findWindow(const char* name) {
+    if (disp == NULL) {
+        disp = XOpenDisplay(NULL);
+        if (disp == NULL) return 0;
+    }
+    Atom clientList = XInternAtom(disp, "_NET_CLIENT_LIST", True);
+    Atom type;
+    int format;
+    unsigned long nitems, bytes;
+    unsigned char* data = NULL;
+    if (XGetWindowProperty(disp, DefaultRootWindow(disp), clientList, 0, 1024, False, XA_WINDOW, &type, &format, &nitems, &bytes, &data) == Success && data) {
+        Window* list = (Window*)data;
+        for (unsigned long i=0; i<nitems; i++) {
+            char* wname = NULL;
+            if (XFetchName(disp, list[i], &wname) > 0) {
+                if (wname && strcmp(wname, name)==0) {
+                    mainWin = list[i];
+                    if (wname) XFree(wname);
+                    XFree(data);
+                    return mainWin;
+                }
+                if (wname) XFree(wname);
+            }
+        }
+        XFree(data);
+    }
+    return 0;
+}
+
+static int isIconic() {
+    if (!disp || mainWin==0) return 0;
+    Atom WM_STATE = XInternAtom(disp, "WM_STATE", True);
+    Atom type; int format; unsigned long items, bytes; unsigned char* prop=NULL;
+    if (XGetWindowProperty(disp, mainWin, WM_STATE, 0, 2, False, WM_STATE, &type, &format, &items, &bytes, &prop) == Success && prop) {
+        long state = *(long*)prop;
+        XFree(prop);
+        return state == IconicState;
+    }
+    return 0;
+}
+
+static void hideWindow() {
+    if (disp && mainWin) { XUnmapWindow(disp, mainWin); XFlush(disp); }
+}
+
+static void showWindow() {
+    if (disp && mainWin) { XMapRaised(disp, mainWin); XFlush(disp); }
+}
 */
 import "C"
 import (
@@ -13,8 +74,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
+	"time"
+	"unsafe"
+
+	"github.com/getlantern/systray"
 )
 
 var downloadMu sync.Mutex
@@ -143,34 +209,34 @@ func InitXray() *C.char {
 
 //export UpdateXrayCore
 func UpdateXrayCore() *C.char {
-        downloadMu.Lock()
-        defer downloadMu.Unlock()
-        if downloading {
-                return C.CString("info:downloading in background")
-        }
-        downloading = true
-        go func() {
-                defer func() {
-                        downloadMu.Lock()
-                        downloading = false
-                        downloadMu.Unlock()
-                }()
-                if err := downloadAndInstallXray(); err != nil {
-                        fmt.Println("Download failed:", err)
-                }
-        }()
-        return C.CString("info:download started")
+	downloadMu.Lock()
+	defer downloadMu.Unlock()
+	if downloading {
+		return C.CString("info:downloading in background")
+	}
+	downloading = true
+	go func() {
+		defer func() {
+			downloadMu.Lock()
+			downloading = false
+			downloadMu.Unlock()
+		}()
+		if err := downloadAndInstallXray(); err != nil {
+			fmt.Println("Download failed:", err)
+		}
+	}()
+	return C.CString("info:download started")
 }
 
 //export IsXrayDownloading
 func IsXrayDownloading() C.int {
-       downloadMu.Lock()
-       d := downloading
-       downloadMu.Unlock()
-       if d {
-               return 1
-       }
-       return 0
+	downloadMu.Lock()
+	d := downloading
+	downloadMu.Unlock()
+	if d {
+		return 1
+	}
+	return 0
 }
 
 //export ResetXrayAndConfig
@@ -183,4 +249,60 @@ func ResetXrayAndConfig(passwordC *C.char) *C.char {
 		return C.CString("error:" + out)
 	}
 	return C.CString("success")
+}
+
+// ---- System tray integration ----
+
+var trayOnce sync.Once
+
+func monitorMinimize() {
+	for {
+		if C.getMainWin() == 0 {
+			cname := C.CString("xstream")
+			C.findWindow(cname)
+			C.free(unsafe.Pointer(cname))
+		}
+		if C.getMainWin() != 0 {
+			if C.isIconic() != 0 {
+				C.hideWindow()
+			}
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+//export InitTray
+func InitTray() {
+	trayOnce.Do(func() {
+		go func() {
+			runtime.LockOSThread()
+			systray.Run(func() {
+				icon, err := os.ReadFile("data/flutter_assets/assets/logo.png")
+				if err == nil {
+					systray.SetIcon(icon)
+				}
+				mShow := systray.AddMenuItem("Show", "Show window")
+				mQuit := systray.AddMenuItem("Quit", "Quit")
+				go func() {
+					for {
+						select {
+						case <-mShow.ClickedCh:
+							if C.getMainWin() == 0 {
+								cname := C.CString("xstream")
+								C.findWindow(cname)
+								C.free(unsafe.Pointer(cname))
+							}
+							if C.getMainWin() != 0 {
+								C.showWindow()
+							}
+						case <-mQuit.ClickedCh:
+							systray.Quit()
+							return
+						}
+					}
+				}()
+				go monitorMinimize()
+			}, func() {})
+		}()
+	})
 }
