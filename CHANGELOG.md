@@ -35,7 +35,7 @@ _Release Date: 2025-06-08_
 - Revised license attributions
 
 ## ✅ Changes
-- Fixed duplicate VPN service start
+- Fixed duplicate network service start
 - Resolved logConsoleKey import
 - Improved CI and BuildContext usage
 
