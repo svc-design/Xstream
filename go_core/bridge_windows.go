@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/getlantern/systray"
+	"golang.org/x/sys/windows"
 	"io"
 	"net/http"
 	"os"
@@ -18,9 +20,6 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-	"github.com/getlantern/systray"
-	"golang.org/x/sys/windows"
-	"syscall"
 )
 
 var downloadMu sync.Mutex
@@ -176,9 +175,9 @@ func StartNodeService(name *C.char) *C.char {
 
 	// 后台运行 xray.exe run -c config.json
 	cmd := exec.Command(xrayPath, "run", "-c", configJson)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
+	cmd.SysProcAttr = &windows.SysProcAttr{
 		HideWindow:    true, // 避免弹出窗口
-		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
+		CreationFlags: windows.CREATE_NEW_PROCESS_GROUP,
 	}
 	if err := cmd.Start(); err != nil {
 		return C.CString("error: xray start failed: " + err.Error())
