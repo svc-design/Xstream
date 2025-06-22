@@ -18,13 +18,14 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-
 	"github.com/getlantern/systray"
 	"golang.org/x/sys/windows"
+	"syscall"
 )
 
 var downloadMu sync.Mutex
 var downloading bool
+var processMap sync.Map
 
 func serviceExists(name string) bool {
 	out, _ := exec.Command("sc", "query", name).CombinedOutput()
@@ -158,16 +159,54 @@ func CreateWindowsService(nameC, execC, configC *C.char) *C.char {
 
 //export StartNodeService
 func StartNodeService(name *C.char) *C.char {
-	cmd := exec.Command("sc", "start", C.GoString(name))
-	err := cmd.Run()
-	return cStringOrError(err)
+	serviceName := C.GoString(name)
+	programDir := filepath.Join(os.Getenv("ProgramFiles"), "Xstream")
+	xrayPath := filepath.Join(programDir, "xray.exe")
+	targetConfig := filepath.Join(programDir, serviceName+".json")
+	configJson := filepath.Join(programDir, "config.json")
+
+	// 强制复制 config.json ← service-specific json
+	input, err := os.ReadFile(targetConfig)
+	if err != nil {
+		return C.CString("error: read " + targetConfig + " failed: " + err.Error())
+	}
+	if err := os.WriteFile(configJson, input, 0644); err != nil {
+		return C.CString("error: write config.json failed: " + err.Error())
+	}
+
+	// 后台运行 xray.exe run -c config.json
+	cmd := exec.Command(xrayPath, "run", "-c", configJson)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow:    true, // 避免弹出窗口
+		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
+	}
+	if err := cmd.Start(); err != nil {
+		return C.CString("error: xray start failed: " + err.Error())
+	}
+
+	// 成功启动
+	processMap.Store(serviceName, cmd)
+	return C.CString("success")
 }
 
 //export StopNodeService
 func StopNodeService(name *C.char) *C.char {
-	cmd := exec.Command("sc", "stop", C.GoString(name))
-	err := cmd.Run()
-	return cStringOrError(err)
+	serviceName := C.GoString(name)
+
+	// 精准结束进程
+	if val, ok := processMap.Load(serviceName); ok {
+		if cmd, ok := val.(*exec.Cmd); ok && cmd.Process != nil {
+			if err := cmd.Process.Kill(); err != nil {
+				return C.CString("error: kill failed: " + err.Error())
+			}
+			processMap.Delete(serviceName)
+			return C.CString("success")
+		}
+	}
+
+	// 兜底杀掉全部 xray.exe
+	exec.Command("taskkill", "/F", "/IM", "xray.exe").Run()
+	return C.CString("success")
 }
 
 //export CheckNodeStatus
