@@ -60,7 +60,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # 通用 flutter setup
       - name: Set up Flutter (Unix)
         if: ${{ matrix.platform != 'windows' }}
         shell: bash
@@ -68,7 +67,6 @@ jobs:
           if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
             sudo apt-get update
             sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
-            sudo apt-get install -y curl unzip clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev
             mkdir -p $HOME/flutter
             curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
             tar xf flutter_linux_3.22.2-stable.tar.xz -C $HOME/flutter --strip-components=1
@@ -90,7 +88,6 @@ jobs:
           channel: stable
           flutter-version: '3.32.2'
 
-      # Go & MSYS2 setup (Windows)
       - name: Set up Go (Windows)
         if: ${{ matrix.platform == 'windows' }}
         uses: actions/setup-go@v5
@@ -110,7 +107,6 @@ jobs:
         shell: "msys2 {0}"
         run: ./build_scripts/build_windows.sh
 
-      # Go for Linux
       - name: Set up Go (Linux only)
         if: ${{ matrix.platform == 'linux' }}
         uses: actions/setup-go@v5
@@ -125,17 +121,14 @@ jobs:
         if: ${{ matrix.platform == 'linux' }}
         run: ./build_scripts/build_linux.sh
 
-      # Flutter pub
       - name: Flutter pub get
         run: flutter pub get
 
-      # Flutter test 只在 Linux 跑
       - name: Run Flutter tests (Linux only)
         if: ${{ matrix.platform == 'linux' }}
         run: flutter test --reporter expanded
         continue-on-error: true
 
-      # Android build
       - name: Build Android App
         if: ${{ matrix.platform == 'android' }}
         shell: bash
@@ -144,13 +137,11 @@ jobs:
           dart run flutter_launcher_icons
           flutter build apk --release
 
-      # iOS
       - name: Build iOS App
         if: ${{ matrix.platform == 'ios' }}
         shell: bash
         run: flutter build ios --release --no-codesign
 
-      # macOS
       - name: Build macOS App
         if: ${{ matrix.platform == 'macos' }}
         shell: bash
@@ -160,7 +151,6 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         run: make macos-${ARCH}
 
-      # Linux build
       - name: Build Linux App
         if: ${{ matrix.platform == 'linux' }}
         shell: bash
@@ -171,7 +161,6 @@ jobs:
         run: |
           bash build_scripts/package_linux_bundle.sh
 
-      # Windows build
       - name: Build Windows App
         if: ${{ matrix.platform == 'windows' }}
         shell: powershell
@@ -184,14 +173,12 @@ jobs:
         run: |
           ./build_scripts/package_windows_bundle.ps1
 
-      # iOS 压缩
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
         run: |
           cd build/ios/iphoneos
           zip -r XStream.app.zip Runner.app
 
-      # 上传 artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -207,6 +194,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        platform:
+          - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
+          - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
+          - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
+          - { name: github, file_pattern: '**/*', remote_path: '' }
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -217,7 +212,8 @@ jobs:
           path: release-artifacts
           if-no-artifact-found: ignore
 
-      - name: Publish GitHub Release
+      - name: Upload to GitHub Release
+        if: matrix.platform.name == 'github'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: daily-${{ github.run_number }}
@@ -225,8 +221,9 @@ jobs:
           files: release-artifacts/**/*.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish macOS DMG to update server
+          
+      - name: Upload ${{ matrix.platform.name }} bundle via rsync
+        if: matrix.platform.name != 'github'
         env:
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -236,41 +233,22 @@ jobs:
           echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          DMG_FILE=$(find release-artifacts -name '*.dmg' | head -n 1)
-          rsync -av "$DMG_FILE" root@"$VPS_HOST":/mnt/data/update-server/xstream-macos-latest/xstream-macos-latest.dmg --delete
 
-      - name: Publish Linux bundle to update server
-        env:
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          LINUX_ZIP=$(find release-artifacts -name 'xstream-linux.zip' | head -n 1)
-          rsync -av "$LINUX_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-linux-latest/xstream-linux-latest.zip --delete
-
-      - name: Publish Windows bundle to update server
-        env:
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          WIN_ZIP=$(find release-artifacts -name 'xstream-windows.zip' | head -n 1)
-          rsync -av "$WIN_ZIP" root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.zip --delete
+          FILE=$(find release-artifacts -name '${{ matrix.platform.file_pattern }}' | head -n 1)
+          echo "Uploading $FILE to /mnt/data/update-server/${{ matrix.platform.remote_path }}"
+          rsync -av "$FILE" root@"$VPS_HOST":/mnt/data/update-server/${{ matrix.platform.remote_path }} --delete
 
   publish-stores:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     needs: release
     strategy:
       matrix:
         store: [apple, google, microsoft]
+    env:
+      PUBLISH_APPLE: false
+      PUBLISH_GOOGLE: false
+      PUBLISH_MICROSOFT: false
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -282,7 +260,7 @@ jobs:
           if-no-artifact-found: ignore
 
       - name: Deploy to Apple App Store
-        if: ${{ matrix.store == 'apple' }}
+        if: matrix.store == 'apple' && env.PUBLISH_APPLE == 'true'
         uses: maierj/fastlane-action@v3.1.0
         with:
           lane: 'appstore'
@@ -291,7 +269,7 @@ jobs:
           ipa_path: release-artifacts/**/*.ipa
 
       - name: Deploy to Google Play
-        if: ${{ matrix.store == 'google' }}
+        if: matrix.store == 'google' && env.PUBLISH_GOOGLE == 'true'
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -299,7 +277,7 @@ jobs:
           releaseFiles: release-artifacts/**/*.apk
 
       - name: Deploy to Microsoft Store
-        if: ${{ matrix.store == 'microsoft' }}
+        if: matrix.store == 'microsoft' && env.PUBLISH_MICROSOFT == 'true'
         uses: actions-marketplace-validations/trympet_microsoft-store-flight-action@main
         with:
           tenant-id: ${{ secrets.MS_STORE_TENANT_ID }}
@@ -308,13 +286,3 @@ jobs:
           app-id: ${{ secrets.MS_STORE_APP_ID }}
           flight-id: 'default'
           package-path: release-artifacts/**/*.msix
-
-      - name: Output test link
-        run: |
-          if [ "${{ matrix.store }}" = "apple" ]; then
-            echo "TestFlight: https://testflight.apple.com/join/example" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ matrix.store }}" = "google" ]; then
-            echo "Google Play Internal: https://play.google.com/apps/testing/com.example.xstream" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Microsoft Store Test: https://www.microsoft.com/store/apps/9NBLGGH4R315" >> "$GITHUB_STEP_SUMMARY"
-          fi
