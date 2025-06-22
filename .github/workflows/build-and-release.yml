@@ -154,7 +154,7 @@ jobs:
       - name: Build Linux App
         if: ${{ matrix.platform == 'linux' }}
         shell: bash
-        run: flutter build linux --release
+        run: flutter build linux --release -v
 
       - name: Package and verify Linux bundle
         if: ${{ matrix.platform == 'linux' }}
