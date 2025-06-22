@@ -15,10 +15,12 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 var downloadMu sync.Mutex
 var downloading bool
+var processMap sync.Map
 
 func serviceExists(name string) bool {
 	out, _ := exec.Command("sc", "query", name).CombinedOutput()
@@ -161,7 +163,7 @@ func StartNodeService(name *C.char) *C.char {
 	// 强制复制 config.json ← service-specific json
 	input, err := os.ReadFile(targetConfig)
 	if err != nil {
-		return C.CString("error: read "+targetConfig+" failed: " + err.Error())
+		return C.CString("error: read " + targetConfig + " failed: " + err.Error())
 	}
 	if err := os.WriteFile(configJson, input, 0644); err != nil {
 		return C.CString("error: write config.json failed: " + err.Error())
