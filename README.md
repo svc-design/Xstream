@@ -40,7 +40,8 @@
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
-- 🪟 [Windows 服务运行指南](docs/windows-xray-sc.md)
+- 🪟 [Windows 计划任务运行指南](docs/windows-task-scheduler.md)
+
 按照 [Windows 开发环境搭建](docs/windows-build.md) 文档安装 **MinGW-w64** 后，执行脚本即可生成 `libgo_native_bridge.dll`：
 
 ./build_scripts/build_windows.sh
