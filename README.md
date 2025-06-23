@@ -15,6 +15,7 @@
 - 支持 macOS 权限验证与服务管理
 - 解耦式界面设计，支持跨平台构建
 - Windows/Linux 版本最小化时自动隐藏到系统托盘（右下角）
+- Windows 版本支持计划任务部署与后台运行
 
 ---
 
@@ -26,7 +27,7 @@
 | macOS    | x64      | ⚠️ 未测试   |
 | Linux    | x64      | ⚠️ 未测试   |
 | Linux    | arm64    | ⚠️ 未测试   |
-| Windows  | x64      | ⚠️ 未测试   |
+| Windows  | x64      | ✅ 已测试   |
 | Android  | arm64    | ⚠️ 未测试   |
 | iOS      | arm64    | ⚠️ 未测试   |
 
