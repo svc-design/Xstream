@@ -5,6 +5,7 @@ import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
+import '../../services/telemetry/telemetry_service.dart';
 import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
@@ -245,6 +246,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: const Text('升级 DailyBuild', style: _menuTextStyle),
                 value: GlobalState.useDailyBuild.value,
                 onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.stacked_line_chart),
+                title: const Text('匿名统计', style: _menuTextStyle),
+                subtitle: const Text('收集系统版本、运行时间等，可在此关闭'),
+                value: GlobalState.telemetryEnabled.value,
+                onChanged: (v) {
+                  setState(() => GlobalState.telemetryEnabled.value = v);
+                  if (v) {
+                    TelemetryService.send(appVersion: _buildVersion());
+                  }
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.system_update),

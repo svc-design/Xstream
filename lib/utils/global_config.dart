@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../widgets/log_console.dart';
 
 const String kUpdateBaseUrl = 'https://artifact.onwalk.net/';
+const String kTelemetryEndpoint = 'https://artifact.onwalk.net/telemetry';
 
 // LogConsole Global Key
 final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();
@@ -22,6 +23,9 @@ class GlobalState {
 
   /// 调试模式开关，由 `--debug` 参数控制
   static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
+
+  /// 遥测开关：true 表示发送匿名统计信息
+  static final ValueNotifier<bool> telemetryEnabled = ValueNotifier<bool>(false);
 
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
