@@ -31,8 +31,20 @@ class GlobalState {
 class GlobalApplicationConfig {
   /// Windows 平台默认安装目录
   static String get windowsBasePath {
-    final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
-    return '$base\\Xstream';
+    final program = Platform.environment['ProgramFiles'];
+    if (program != null) {
+      final path = '$program\\Xstream';
+      try {
+        Directory(path).createSync(recursive: true);
+        return path;
+      } catch (_) {
+        // ignore and fall back
+      }
+    }
+    final local = Platform.environment['LOCALAPPDATA'] ?? '.';
+    final alt = '$local\\Xstream';
+    Directory(alt).createSync(recursive: true);
+    return alt;
   }
 
   /// Xray 可执行文件路径
@@ -93,9 +105,7 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}/vpn_nodes.json';
 
       case 'windows':
-        final base = Platform.environment['ProgramFiles'] ??
-            (await getApplicationSupportDirectory()).path;
-        final xstreamDir = Directory('$base\\Xstream');
+        final xstreamDir = Directory(windowsBasePath);
         await xstreamDir.create(recursive: true);
         return '${xstreamDir.path}\\vpn_nodes.json';
 
@@ -139,8 +149,7 @@ class GlobalApplicationConfig {
       case 'linux':
         return '/etc/systemd/system/$serviceName';
       case 'windows':
-        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
-        return '$base\\Xstream\\$serviceName';
+        return '$windowsBasePath\\$serviceName';
       default:
         return serviceName;
     }

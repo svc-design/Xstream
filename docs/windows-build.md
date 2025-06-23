@@ -34,3 +34,15 @@ GitHub Actions will compress the entire `build/windows/x64/runner/Release`
 directory into `xstream-windows.zip` for distribution. The archive includes
 `flutter_windows.dll` so the application can run on systems without Flutter
 installed.
+
+## 5. 打包 MSIX 以便上架 Microsoft Store
+
+项目现已支持通过 [msix](https://pub.dev/packages/msix) 插件生成可上架
+Microsoft Store 的安装包。只需在 Windows 环境执行脚本：
+
+```powershell
+./build_scripts/package_windows_msix.ps1
+```
+
+脚本会根据根目录下的 `msix_config.yaml` 创建 `.msix` 文件，生成的安装包
+将位于 `build/windows/x64/runner/Release/` 目录下。

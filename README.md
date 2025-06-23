@@ -16,6 +16,7 @@
 - 解耦式界面设计，支持跨平台构建
 - Windows/Linux 版本最小化时自动隐藏到系统托盘（右下角）
 - Windows 版本支持计划任务部署与后台运行
+- Windows 版本现已支持生成 MSIX 安装包并上架 Microsoft Store
 
 ---
 

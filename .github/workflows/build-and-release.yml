@@ -173,6 +173,12 @@ jobs:
         run: |
           ./build_scripts/package_windows_bundle.ps1
 
+      - name: Build MSIX package
+        if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
+        run: |
+          ./build_scripts/package_windows_msix.ps1
+
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
         run: |
@@ -188,6 +194,7 @@ jobs:
             build/linux/x64/release/bundle/xstream-linux.zip
             build/linux/x64/release/AppImage/xstream-linux.AppImage
             build/windows/x64/runner/Release/xstream-windows.zip
+            build/windows/x64/runner/Release/*.msix
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
 
@@ -200,6 +207,7 @@ jobs:
           - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
           - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
           - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
+          - { name: windows-msix, file_pattern: '*.msix', remote_path: 'xstream-windows-latest/xstream-windows-latest.msix' }
           - { name: github, file_pattern: '**/*', remote_path: '' }
 
     steps:
