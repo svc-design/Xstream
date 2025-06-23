@@ -26,7 +26,7 @@
 | macOS    | x64      | ⚠️ 未测试   |
 | Linux    | x64      | ⚠️ 未测试   |
 | Linux    | arm64    | ⚠️ 未测试   |
-| Windows  | x64      | ⚠️ 未测试   |
+| Windows  | x64      | ✅ 已测试   |
 | Android  | arm64    | ⚠️ 未测试   |
 | iOS      | arm64    | ⚠️ 未测试   |
 
