@@ -1,5 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Utilities for gathering runtime info for diagnostics. This implementation
+/// stores data locally only and does **not** send it anywhere, complying with
+/// the project's telemetry policy in `AGENTS.md`.
+
 import '../../utils/global_config.dart'
     show GlobalState, collectSystemInfo;
 
