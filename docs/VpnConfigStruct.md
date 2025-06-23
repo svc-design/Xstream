@@ -1,13 +1,17 @@
 # VpnConfig 结构说明
 
 1. VpnNode 类
-VpnNode 类用于表示一个加速节点的数据结构。每个 VpnNode 实例代表一个加速配置节点，包含以下字段：
+
+VpnNode 类用于表示一个加速节点的数据结构。每个 Node 实例代表一个加速配置节点，包含以下字段：
 
 字段：
 name：节点名称（如 "US-Node"）。
 countryCode：节点所在国家的代码（如 "us"）。
 configPath：配置文件路径（如 "/opt/homebrew/etc/xray-vpn-node-us.json"）。
-serviceName：服务名称，macOS 为 LaunchAgent plist 名称，Linux 为 systemd 服务名，Windows 为 SC 服务名。
+serviceName：启动控制文件或任务名，按平台约定如下：
+  - macOS：`com.xstream.xray-node-<region>.plist`
+  - Linux：`xray-node-<region>.service`
+  - Windows：`ray-node-<region>.schtasks`
 enabled：节点是否启用（默认 true）。
 
 方法：
