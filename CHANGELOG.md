@@ -1,3 +1,40 @@
+# XStream v0.2.0 - Windows Release
+
+_Release Date: 2025-06-10_
+
+## ✨ Features
+- Windows platform support with service-based deployment
+- Packaging includes automatic service registration for background running
+- Integrated Bridge Windows module for one-click start and recovery
+
+## ✅ Changes
+- Verified config.json and Task Scheduler deployment
+- Passed multi-region switch and proxy tests on Windows
+
+# XStream v0.1.4 - macOS Tray Support
+
+_Release Date: 2025-06-09_
+
+## ✨ Features
+- macOS system tray status icon with window toggle
+- Icon generation script for automated build
+
+## ✅ Changes
+- Improved minimize behavior on macOS
+- Cleaned plugin registration
+
+# XStream v0.1.3 - Linux Runner
+
+_Release Date: 2025-06-08_
+
+## ✨ Features
+- Go-based Linux native bridge with systemd support
+- Updated CI workflow for Linux builds
+
+## ✅ Changes
+- Fixed cross-platform build scripts
+- Added Linux systemd documentation
+
 # XStream v0.1.2 - Beta Update
 
 _Release Date: 2025-06-08_
@@ -11,7 +48,7 @@ _Release Date: 2025-06-08_
 - Revised license attributions
 
 ## ✅ Changes
-- Fixed duplicate VPN service start
+- Fixed duplicate network service start
 - Resolved logConsoleKey import
 - Improved CI and BuildContext usage
 

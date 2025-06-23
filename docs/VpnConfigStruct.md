@@ -1,13 +1,17 @@
 # VpnConfig 结构说明
 
 1. VpnNode 类
-VpnNode 类用于表示一个 VPN 节点的数据结构。每个 VpnNode 实例代表一个 VPN 配置节点，包含以下字段：
+
+VpnNode 类用于表示一个加速节点的数据结构。每个 Node 实例代表一个加速配置节点，包含以下字段：
 
 字段：
-name：节点名称（如 "US-VPN"）。
+name：节点名称（如 "US-Node"）。
 countryCode：节点所在国家的代码（如 "us"）。
-configPath：VPN 配置文件路径（如 "/opt/homebrew/etc/xray-vpn-node-us.json"）。
-plistName：LaunchAgent 配置文件名称（如 "xstream.svc.plus.xray-node-us.plist"）。
+configPath：配置文件路径（如 "/opt/homebrew/etc/xray-vpn-node-us.json"）。
+serviceName：启动控制文件或任务名，按平台约定如下：
+  - macOS：`com.xstream.xray-node-<region>.plist`
+  - Linux：`xray-node-<region>.service`
+  - Windows：`ray-node-<region>.schtasks`
 enabled：节点是否启用（默认 true）。
 
 方法：
@@ -15,10 +19,10 @@ fromJson(Map<String, dynamic> json)：工厂构造函数，用于将 JSON 数据
 toJson()：将 VpnNode 对象转换为 JSON 格式。
 
 2. VpnConfig 类
-VpnConfig 类用于集中管理和操作 VPN 配置，包括 VPN 节点的加载、保存、更新、删除等功能。
+VpnConfig 类用于集中管理和操作加速配置，包括加速节点的加载、保存、更新、删除等功能。
 
 静态变量：
-_nodes：一个存储所有 VpnNode 实例的列表，用于管理 VPN 节点。
+_nodes：一个存储所有 VpnNode 实例的列表，用于管理加速节点。
 
 静态方法：
 2.1 _getBundleId()
@@ -39,7 +43,7 @@ _nodes：一个存储所有 VpnNode 实例的列表，用于管理 VPN 节点。
 返回值：Future<String> 类型，表示本地配置路径。
 
 2.4 load()
-加载 VPN 节点配置，仅读取本地文件，如不存在则返回空列表。
+加载加速节点配置，仅读取本地文件，如不存在则返回空列表。
 
 功能：从本地配置文件中加载节点信息。
 
@@ -78,7 +82,7 @@ _nodes：一个存储所有 VpnNode 实例的列表，用于管理 VPN 节点。
 2.11 importFromJson(String jsonStr)
 从给定的 JSON 字符串中导入 VpnNode 数据，并保存到本地文件。
 
-参数：jsonStr：包含 VPN 节点的 JSON 字符串。
+参数：jsonStr：包含加速节点的 JSON 字符串。
 
 2.12 deleteNodeFiles(VpnNode node)
 删除与指定 VpnNode 相关的配置文件和 plist 文件。
@@ -109,20 +113,20 @@ setMessage：设置消息的回调函数。
 logMessage：日志输出的回调函数。
 
 3. 使用示例
-获取 VPN 配置文件路径：
+获取配置文件路径：
 dart
 复制
 编辑
 final configPath = await VpnConfig.getConfigPath();
-加载并管理 VPN 节点：
+加载并管理加速节点：
 dart
 复制
 编辑
-// 加载 VPN 节点配置
+// 加载加速节点配置
 await VpnConfig.load();
 
 // 获取某个节点
-VpnNode? node = VpnConfig.getNodeByName("US-VPN");
+VpnNode? node = VpnConfig.getNodeByName("US-Node");
 
 // 添加节点
 VpnConfig.addNode(newNode);
@@ -137,7 +141,7 @@ dart
 复制
 编辑
 await VpnConfig.generateContent(
-  nodeName: 'US-VPN',
+  nodeName: 'US-Node',
   domain: 'us.example.com',
   port: '443',
   uuid: 'uuid-1234',
@@ -148,4 +152,4 @@ await VpnConfig.generateContent(
   logMessage: (message) => print(message),
 );
 结论
-合并后的 VpnConfig 类通过集中管理 VPN 配置文件的读取、保存、更新、删除等操作，提供了统一的接口和管理方式，使得代码更加简洁、模块化。VpnNode 类专注于数据结构定义，VpnConfig 类负责对配置的管理和操作，符合单一职责原则。
+合并后的 VpnConfig 类通过集中管理加速配置文件的读取、保存、更新、删除等操作，提供了统一的接口和管理方式，使得代码更加简洁、模块化。VpnNode 类专注于数据结构定义，VpnConfig 类负责对配置的管理和操作，符合单一职责原则。

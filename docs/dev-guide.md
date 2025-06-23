@@ -54,6 +54,11 @@ macos/
 
 lib/services/update/
 ├── models/update_info.dart         ✅ 原 `UpdateInfo` 数据结构已迁移
-├── update_platform.dart            ✅ 平台识别 + 渠道（stable/beta）支持
+├── update_platform.dart            ✅ 平台识别 + 渠道（stable/latest）支持
 ├── update_service.dart             ✅ 使用 Pulp REST API 查询版本
 └── update_checker.dart             ✅ 定时检查 + 弹窗 UI 封装
+
+- DMG filename now follows the pattern:
+  - `xstream-release-<tag>.dmg` if tagged on main branch
+  - `xstream-latest-<commit>.dmg` if untagged on main
+  - `xstream-dev-<commit>.dmg` for non-main branches

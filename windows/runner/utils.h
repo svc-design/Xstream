@@ -16,4 +16,7 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string);
 // encoded in UTF-8. Returns an empty std::vector<std::string> on failure.
 std::vector<std::string> GetCommandLineArguments();
 
+// Global debug flag, set when '--debug' is passed on the command line.
+extern bool g_debugMode;
+
 #endif  // RUNNER_UTILS_H_

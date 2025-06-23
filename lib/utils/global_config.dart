@@ -19,28 +19,130 @@ class GlobalState {
 
   /// 升级渠道：true 表示检查 DailyBuild，false 只检查 release
   static final ValueNotifier<bool> useDailyBuild = ValueNotifier<bool>(false);
+
+  /// 调试模式开关，由 `--debug` 参数控制
+  static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
+
+  /// Xray Core 下载状态
+  static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
 }
 
 /// 用于获取应用相关的配置信息
 class GlobalApplicationConfig {
-  /// 从 macOS 配置文件中动态获取 PRODUCT_BUNDLE_IDENTIFIER
+  /// Windows 平台默认安装目录
+  static String get windowsBasePath {
+    final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+    return '$base\\Xstream';
+  }
+
+  /// Xray 可执行文件路径
+  static String get xrayExePath {
+    switch (Platform.operatingSystem) {
+      case 'windows':
+        return '$windowsBasePath\\xray.exe';
+      case 'linux':
+        final home = Platform.environment['HOME'] ?? '~';
+        return '$home/.local/bin/xray';
+      default:
+        return '/usr/local/bin/xray';
+    }
+  }
+  /// 从配置文件或默认值中获取 PRODUCT_BUNDLE_IDENTIFIER
   static Future<String> getBundleId() async {
-    try {
-      // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
-      final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
-      final line = config.split('\n').firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
-      return line.split('=').last.trim();
-    } catch (_) {
-      return 'com.xstream'; // 返回默认值
+    if (Platform.isMacOS) {
+      try {
+        // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
+        final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
+        final line = config
+            .split('\n')
+            .firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
+        return line.split('=').last.trim();
+      } catch (_) {
+        // macOS 下若读取失败返回默认值
+        return 'com.xstream';
+      }
+    }
+
+    // 其他平台直接返回默认值
+    return 'com.xstream';
+  }
+
+  /// 返回各平台下存放 Xray 配置文件的目录，末尾已包含分隔符
+  static String get xrayConfigPath {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return '/opt/homebrew/etc/';
+      case 'windows':
+        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+        return '$base\\Xstream\\';
+      case 'linux':
+        return '/opt/etc/';
+      default:
+        return '';
     }
   }
 
-  /// 默认本地配置文件路径（macOS）
+  /// 根据平台返回本地配置文件路径
   static Future<String> getLocalConfigPath() async {
-    final bundleId = await getBundleId();  // 获取 PRODUCT_BUNDLE_IDENTIFIER
-    final baseDir = await getApplicationSupportDirectory();  // 获取应用支持目录
-    final xstreamDir = Directory('${baseDir.path}/$bundleId');  // 拼接目录路径
-    await xstreamDir.create(recursive: true);  // 创建目录（如果不存在）
-    return '${xstreamDir.path}/vpn_nodes.json';  // 返回完整路径
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final bundleId = await getBundleId();
+        final baseDir = await getApplicationSupportDirectory();
+        final xstreamDir = Directory('${baseDir.path}/$bundleId');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+
+      case 'windows':
+        final base = Platform.environment['ProgramFiles'] ??
+            (await getApplicationSupportDirectory()).path;
+        final xstreamDir = Directory('$base\\Xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}\\vpn_nodes.json';
+
+      case 'linux':
+        final home = Platform.environment['HOME'] ??
+            (await getApplicationSupportDirectory()).path;
+        final xstreamDir = Directory('$home/.config/xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+
+      default:
+        final baseDir = await getApplicationSupportDirectory();
+        final xstreamDir = Directory('${baseDir.path}/xstream');
+        await xstreamDir.create(recursive: true);
+        return '${xstreamDir.path}/vpn_nodes.json';
+    }
+  }
+
+  /// 根据 region 生成各平台的启动控制文件或任务名称
+  static Future<String> serviceNameForRegion(String region) async {
+    final code = region.toLowerCase();
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final bundleId = await getBundleId();
+        return '$bundleId.xray-node-$code.plist';
+      case 'linux':
+        return 'xray-node-$code.service';
+      case 'windows':
+        return 'ray-node-$code.schtasks';
+      default:
+        return 'xray-node-$code';
+    }
+  }
+
+  /// 根据平台和服务名称返回服务配置文件路径
+  static String servicePath(String serviceName) {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final home = Platform.environment['HOME'] ?? '/Users/unknown';
+        return '$home/Library/LaunchAgents/$serviceName';
+      case 'linux':
+        return '/etc/systemd/system/$serviceName';
+      case 'windows':
+        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+        return '$base\\Xstream\\$serviceName';
+      default:
+        return serviceName;
+    }
   }
 }

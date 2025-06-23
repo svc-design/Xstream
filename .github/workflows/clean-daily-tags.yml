@@ -1,0 +1,29 @@
+name: Clean Old Daily Tags
+
+on:
+  schedule:
+    - cron: '0 19 * * 0' # 每周日凌晨3点（UTC时间为19点，东八区 +8 小时）
+
+  workflow_dispatch: # 手动触发也可
+
+jobs:
+  clean-tags:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: 🛠 Setup jq
+        run: sudo apt-get install -y jq
+
+      - name: 🔐 Set up Git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: ♻️ Clean old daily tags and GitHub releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash scripts/clean_old_tags.sh

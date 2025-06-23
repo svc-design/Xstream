@@ -2,17 +2,17 @@
 
 import 'dart:io';
 
-enum UpdateChannel { stable, beta }
+enum UpdateChannel { stable, latest }
 
 class UpdatePlatform {
   static String getRepoName(UpdateChannel channel) {
     final base = switch (Platform.operatingSystem) {
       'macos' => 'xstream-macos',
-      'windows' => 'xstream-win',
+      'windows' => 'xstream-windows',
       'android' => 'xstream-android',
-      'linux' => 'xstream-deb',
+      'linux' => 'xstream-linux',
       _ => throw UnsupportedError('Unsupported platform'),
     };
-    return channel == UpdateChannel.beta ? '$base-beta' : '$base-stable';
+    return channel == UpdateChannel.latest ? '$base-latest' : '$base-stable';
   }
 }

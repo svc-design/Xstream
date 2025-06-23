@@ -13,6 +13,19 @@ BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BUILD_ID := $(shell git rev-parse --short HEAD)
 BUILD_DATE := $(shell date "+%Y-%m-%d")
 
+DMG_TAG := $(shell git describe --tags --exact-match 2>/dev/null || echo "")
+IS_MAIN := $(shell test "$(BRANCH)" = "main" && echo "yes" || echo "no")
+DMG_NAME := $(shell \
+	if [ "$(IS_MAIN)" = "yes" ]; then \
+		if [ "$(DMG_TAG)" != "" ]; then \
+			echo "xstream-release-$(DMG_TAG).dmg"; \
+		else \
+			echo "xstream-latest-$(BUILD_ID).dmg"; \
+		fi; \
+	else \
+		echo "xstream-dev-$(BUILD_ID).dmg"; \
+	fi)
+
 .PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
@@ -53,15 +66,14 @@ macos-intel:
 			--dart-define=BUILD_ID=$(BUILD_ID) \
 			--dart-define=BUILD_DATE=$(BUILD_DATE); \
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-$(BRANCH).dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
 			--window-size 800 400 \
 			--icon-size 100 \
 			--app-drop-link 600 185 \
-			build/macos/$$DMG_NAME \
-			build/macos/Build/Products/Release/xstream.app;\
+			build/macos/$(DMG_NAME) \
+			build/macos/Build/Products/Release/xstream.app; \
 	else \
 		echo "Skipping macOS Intel build (not on Intel architecture)"; \
 	fi
@@ -74,26 +86,27 @@ macos-arm64:
 			--dart-define=BUILD_ID=$(BUILD_ID) \
 			--dart-define=BUILD_DATE=$(BUILD_DATE); \
 		brew install create-dmg || true; \
-		DMG_NAME=xstream-release-$(BRANCH).dmg; \
 		create-dmg \
 			--volname "XStream Installer" \
 			--window-pos 200 120 \
 			--window-size 800 400 \
 			--icon-size 100 \
 			--app-drop-link 600 185 \
-			build/macos/$$DMG_NAME \
-			build/macos/Build/Products/Release/xstream.app;\
+			build/macos/$(DMG_NAME) \
+			build/macos/Build/Products/Release/xstream.app; \
 	else \
 		echo "Skipping macOS ARM64 build (not on ARM architecture)"; \
 	fi
 
 windows-x64:
-	@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
-		echo "Building for Windows (native)..."; \
-		flutter build windows --release; \
-	else \
-		echo "Windows build only supported on native Windows systems"; \
-	fi
+@if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
+ echo "Building for Windows (native)..."; \
+ flutter pub get; \
+ flutter pub outdated; \
+ flutter build windows --release; \
+ else \
+ echo "Windows build only supported on native Windows systems"; \
+ fi
 
 linux-x64:
 	@if [ "$(UNAME_S)" = "Linux" ]; then \

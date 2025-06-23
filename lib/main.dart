@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
@@ -9,10 +10,16 @@ import 'utils/global_config.dart';
 import 'widgets/log_console.dart';
 import 'services/vpn_config_service.dart';
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  final debug = args.contains('--debug') ||
+      Platform.executableArguments.contains('--debug');
+  GlobalState.debugMode.value = debug;
+  if (debug) {
+    debugPrint('🚀 Flutter main() started in debug mode');
+  }
   await VpnConfig.load(); // ✅ 启动时加载 assets + 本地配置
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -24,7 +31,7 @@ class MyApp extends StatelessWidget {
       title: 'XStream',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: MainPage(),
+      home: const MainPage(),
     );
   }
 }

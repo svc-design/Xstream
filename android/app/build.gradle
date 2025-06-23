@@ -5,6 +5,20 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Resolve version from pubspec.yaml when flutter extension lacks it
+def pubspecFile = new File(rootProject.projectDir, "pubspec.yaml")
+def versionNameDefault = "1.0.0"
+def versionCodeDefault = 1
+if (pubspecFile.exists()) {
+    def matcher = (pubspecFile.text =~ /version:\s*([0-9.]+)(?:\+([0-9]+))?/)
+    if (matcher.find()) {
+        versionNameDefault = matcher.group(1)
+        if (matcher.groupCount() > 1 && matcher.group(2)) {
+            versionCodeDefault = matcher.group(2).toInteger()
+        }
+    }
+}
+def flutterExt = project.extensions.findByName("flutter")
 android {
     namespace = "com.example.xstream"
     compileSdk = flutter.compileSdkVersion
@@ -26,8 +40,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = (flutterExt?.metaClass?.respondsTo(flutterExt, "getVersionCode") ? flutterExt.getVersionCode() : versionCodeDefault)
+        versionName = (flutterExt?.metaClass?.respondsTo(flutterExt, "getVersionName") ? flutterExt.getVersionName() : versionNameDefault)
     }
 
     buildTypes {

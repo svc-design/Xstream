@@ -41,7 +41,7 @@ class UpdateChecker {
     final lastVersion = prefs.getString(_lastVersionKey) ?? '0.0.0';
 
     final repoName = UpdatePlatform.getRepoName(channel);
-    final baseUrl = UpdateService.baseUrl; // ✅ 不再是 pulpBaseUrl
+    const baseUrl = UpdateService.baseUrl; // ✅ 不再是 pulpBaseUrl
     final repoUrl = '$baseUrl/$repoName/';
 
     logConsoleKey.currentState?.addLog('[INFO] 开始检查更新...');

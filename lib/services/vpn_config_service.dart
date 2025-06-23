@@ -3,23 +3,30 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import '../utils/global_config.dart';
+import '../utils/native_bridge.dart';
 import '../templates/xray_config_template.dart';
-import '../templates/xray_plist_template.dart';
+import '../templates/xray_service_macos_template.dart';
+import '../templates/xray_service_linux_template.dart';
+import '../templates/xray_service_windows_template.dart';
 
 class VpnNode {
   String name;
   String countryCode;
   String configPath;
-  String plistName;
+  /// Cross-platform service identifier
+  ///
+  /// - macOS: LaunchAgent plist file name
+  /// - Linux: systemd service name
+  /// - Windows: SC service name
+  String serviceName;
   bool enabled;
 
   VpnNode({
     required this.name,
     required this.countryCode,
     required this.configPath,
-    required this.plistName,
+    required this.serviceName,
     this.enabled = true,
   });
 
@@ -28,7 +35,7 @@ class VpnNode {
       name: json['name'],
       countryCode: json['countryCode'],
       configPath: json['configPath'],
-      plistName: json['plistName'],
+      serviceName: json['serviceName'] ?? json['plistName'],
       enabled: json['enabled'] ?? true,
     );
   }
@@ -38,7 +45,7 @@ class VpnNode {
       'name': name,
       'countryCode': countryCode,
       'configPath': configPath,
-      'plistName': plistName,
+      'serviceName': serviceName,
       'enabled': enabled,
     };
   }
@@ -119,11 +126,11 @@ class VpnConfig {
         await jsonFile.delete();
       }
 
-      final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
-      final plistPath = '$homeDir/Library/LaunchAgents/${node.plistName}';
-      final plistFile = File(plistPath);
-      if (await plistFile.exists()) {
-        await plistFile.delete();
+      final servicePath =
+          GlobalApplicationConfig.servicePath(node.serviceName);
+      final serviceFile = File(servicePath);
+      if (await serviceFile.exists()) {
+        await serviceFile.delete();
       }
 
       removeNode(node.name);
@@ -135,7 +142,6 @@ class VpnConfig {
 
   static Future<void> generateDefaultNodes({
     required String password,
-    required MethodChannel platform,
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
@@ -144,9 +150,9 @@ class VpnConfig {
     const port = '1443';
     const uuid = '18d270a9-533d-4b13-b3f1-e7f55540a9b2';
     const nodes = [
-      {'name': 'US-VPN', 'domain': 'us-connector.onwalk.net'},
-      {'name': 'CA-VPN', 'domain': 'ca-connector.onwalk.net'},
-      {'name': 'JP-VPN', 'domain': 'tky-connector.onwalk.net'},
+      {'name': 'US-Node', 'domain': 'us-connector.onwalk.net'},
+      {'name': 'CA-Node', 'domain': 'ca-connector.onwalk.net'},
+      {'name': 'JP-Node', 'domain': 'tky-connector.onwalk.net'},
     ];
 
     for (final node in nodes) {
@@ -157,7 +163,6 @@ class VpnConfig {
         uuid: uuid,
         password: password,
         bundleId: bundleId,
-        platform: platform,
         setMessage: setMessage,
         logMessage: logMessage,
       );
@@ -171,49 +176,53 @@ class VpnConfig {
     required String uuid,
     required String password,
     required String bundleId,
-    required MethodChannel platform,
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-    final homeDir = Platform.environment['HOME'] ?? '/Users/unknown';
     final code = nodeName.split('-').first.toLowerCase();
-    final xrayConfigPath = '/opt/homebrew/etc/xray-vpn-node-$code.json';
+    final prefix = GlobalApplicationConfig.xrayConfigPath;
+    final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
 
     final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
     if (xrayConfigContent.isEmpty) return;
 
-    final plistName = '$bundleId.xray-node-$code.plist';
-    final plistPath = '$homeDir/Library/LaunchAgents/$plistName';
+    final serviceName = await GlobalApplicationConfig.serviceNameForRegion(code);
+    final servicePath = GlobalApplicationConfig.servicePath(serviceName);
 
-    final plistContent = _generatePlistFile(code, bundleId, xrayConfigPath);
-    if (plistContent.isEmpty) return;
+    final serviceContent = _generateServiceContent(
+      code,
+      bundleId,
+      xrayConfigPath,
+      serviceName,
+    );
+    if (serviceContent.isEmpty) return;
 
     final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
       nodeName,
       code,
-      plistName,
+      serviceName,
       xrayConfigPath,
       setMessage,
       logMessage,
     );
 
     try {
-      await platform.invokeMethod('writeConfigFiles', {
-        'xrayConfigPath': xrayConfigPath,
-        'xrayConfigContent': xrayConfigContent,
-        'plistPath': plistPath,
-        'plistContent': plistContent,
-        'vpnNodesConfigPath': vpnNodesConfigPath,
-        'vpnNodesConfigContent': vpnNodesConfigContent,
-        'password': password,
-      });
+      await NativeBridge.writeConfigFiles(
+        xrayConfigPath: xrayConfigPath,
+        xrayConfigContent: xrayConfigContent,
+        servicePath: servicePath,
+        serviceContent: serviceContent,
+        vpnNodesConfigPath: vpnNodesConfigPath,
+        vpnNodesConfigContent: vpnNodesConfigContent,
+        password: password,
+      );
 
       setMessage('✅ 配置已保存: $xrayConfigPath');
-      setMessage('✅ 服务项已生成: $plistPath');
+      setMessage('✅ 服务项已生成: $servicePath');
       setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
-    } on PlatformException catch (e) {
+    } catch (e) {
       setMessage('生成配置失败: $e');
       logMessage('生成配置失败: $e');
     }
@@ -227,7 +236,7 @@ class VpnConfig {
           .replaceAll('<UUID>', uuid);
 
       final jsonObj = jsonDecode(replaced);
-      final formatted = JsonEncoder.withIndent('  ').convert(jsonObj);
+        final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
       return formatted;
     } catch (e) {
@@ -237,13 +246,33 @@ class VpnConfig {
     }
   }
 
-  static String _generatePlistFile(String nodeCode, String bundleId, String configPath) {
+  static String _generateServiceContent(
+      String nodeCode, String bundleId, String configPath, String serviceName) {
     try {
-      return renderXrayPlist(
-        bundleId: bundleId,
-        name: nodeCode.toLowerCase(),
-        configPath: configPath,
-      );
+      switch (Platform.operatingSystem) {
+        case 'macos':
+          return renderXrayPlist(
+            bundleId: bundleId,
+            name: nodeCode.toLowerCase(),
+            configPath: configPath,
+          );
+        case 'linux':
+          final home = Platform.environment['HOME'] ?? '~';
+          final xrayPath = '$home/.local/bin/xray';
+          return renderXrayService(
+            xrayPath: xrayPath,
+            configPath: configPath,
+          );
+        case 'windows':
+          final xrayPath = GlobalApplicationConfig.xrayExePath;
+          return renderXrayServiceWindows(
+            serviceName: serviceName.replaceAll('.schtasks', ''),
+            xrayPath: xrayPath,
+            configPath: configPath,
+          );
+        default:
+          return '';
+      }
     } catch (e) {
       return '';
     }
@@ -252,13 +281,13 @@ class VpnConfig {
   static Future<String> _generateVpnNodesJsonContent(
     String nodeName,
     String nodeCode,
-    String plistName,
+    String serviceName,
     String xrayConfigPath,
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || plistName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
-      final err = 'VPN 节点信息不完整，无法生成 JSON 配置';
+    if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || serviceName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
+        const err = '节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
       return '';
@@ -267,7 +296,7 @@ class VpnConfig {
     final vpnNode = {
       'name': nodeName,
       'countryCode': nodeCode,
-      'plistName': plistName,
+      'serviceName': serviceName,
       'configPath': xrayConfigPath,
       'enabled': true,
     };

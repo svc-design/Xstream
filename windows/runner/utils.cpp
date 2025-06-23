@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+// Debug flag defined in utils.h
+bool g_debugMode = false;
 void CreateAndAttachConsole() {
   if (::AllocConsole()) {
     FILE *unused;

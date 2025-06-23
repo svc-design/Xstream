@@ -10,7 +10,27 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  GtkStatusIcon* tray_icon;
+  GtkWindow* main_window;
 };
+
+static void tray_icon_activate(GtkStatusIcon* status_icon, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (self->main_window) {
+    gtk_widget_show(GTK_WIDGET(self->main_window));
+    gtk_window_deiconify(self->main_window);
+    gtk_window_present(self->main_window);
+  }
+}
+
+static gboolean window_state_event(GtkWidget* widget, GdkEventWindowState* event,
+                                   gpointer user_data) {
+  if (event->changed_mask & GDK_WINDOW_STATE_ICONIFIED &&
+      (event->new_window_state & GDK_WINDOW_STATE_ICONIFIED)) {
+    gtk_widget_hide(widget);
+  }
+  return FALSE;
+}
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
@@ -19,6 +39,7 @@ static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+  self->main_window = window;
 
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
@@ -49,6 +70,18 @@ static void my_application_activate(GApplication* application) {
 
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
+
+  gchar* icon_path = g_build_filename(g_get_current_dir(),
+                                      "data/flutter_assets/assets/logo.png",
+                                      NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  self->tray_icon = gtk_status_icon_new_from_file(icon_path);
+  g_signal_connect(self->tray_icon, "activate", G_CALLBACK(tray_icon_activate), self);
+  gtk_status_icon_set_visible(self->tray_icon, TRUE);
+#pragma GCC diagnostic pop
+  g_free(icon_path);
+  g_signal_connect(window, "window-state-event", G_CALLBACK(window_state_event), NULL);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);

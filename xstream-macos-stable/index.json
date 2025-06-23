@@ -1,0 +1,27 @@
+[
+  {
+    "filename": "xstream-release-v0.1.4.dmg",
+    "version": "0.1.4",
+    "notes": "版本 0.1.4：添加 macOS 系统托盘图标，支持窗口隐藏与切换"
+  },
+  {
+    "filename": "xstream-release-v0.1.3.dmg",
+    "version": "0.1.3",
+    "notes": "版本 0.1.3：实现 Linux 原生桥接，改进跨平台构建"
+  },
+  {
+    "filename": "xstream-release-v0.1.2.dmg",
+    "version": "0.1.2",
+    "notes": "版本 0.1.2：支持在线升级，修复启动状态检查"
+  },
+  {
+    "filename": "xstream-release-v0.1.1.dmg",
+    "version": "0.1.1",
+    "notes": "版本 0.1.1：修复权限提示异常，优化状态同步"
+  },
+  {
+    "filename": "xstream-release-v0.1.0.dmg",
+    "version": "0.1.0",
+    "notes": "版本 0.1.0：首个正式版本"
+  }
+]

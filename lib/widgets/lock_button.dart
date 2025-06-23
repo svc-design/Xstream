@@ -21,11 +21,11 @@ class _LockButtonState extends State<LockButton> {
       builder: (context) {
         TextEditingController passwordController = TextEditingController();
         return AlertDialog(
-          title: Text('输入密码解锁'),
+          title: const Text('输入密码解锁'),
           content: TextField(
             controller: passwordController,
             obscureText: true,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: '密码',
               border: OutlineInputBorder(),
             ),
@@ -33,11 +33,11 @@ class _LockButtonState extends State<LockButton> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('取消'),
+              child: const Text('取消'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(passwordController.text),
-              child: Text('确认'),
+              child: const Text('确认'),
             ),
           ],
         );

@@ -8,8 +8,8 @@ extension AppDelegate {
     guard let args = call.arguments as? [String: Any],
           let xrayConfigPath = args["xrayConfigPath"] as? String,
           let xrayConfigContent = args["xrayConfigContent"] as? String, // 修改这里
-          let plistPath = args["plistPath"] as? String,
-          let plistContent = args["plistContent"] as? String,
+          let servicePath = args["servicePath"] as? String,
+          let serviceContent = args["serviceContent"] as? String,
           let vpnNodesConfigPath = args["vpnNodesConfigPath"] as? String,
           let vpnNodesConfigContent = args["vpnNodesConfigContent"] as? String,
           let sudoPass = args["password"] as? String else {
@@ -21,7 +21,7 @@ extension AppDelegate {
       // 写入 Xray 配置文件
       try writeXrayConfig(path: xrayConfigPath, content: xrayConfigContent, password: sudoPass, result: result)
       // 写入 Plist 配置文件
-      try writePlistFile(path: plistPath, content: plistContent, password: sudoPass, result: result)
+      try writePlistFile(path: servicePath, content: serviceContent, password: sudoPass, result: result)
       // 更新 vpn_nodes.json 文件
       try updateVpnNodesConfig(path: vpnNodesConfigPath, content: vpnNodesConfigContent, password: sudoPass, result: result)
       // 返回成功消息
