@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../utils/global_config.dart';
+import '../../utils/global_config.dart' show GlobalState, buildVersion, logConsoleKey;
 import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
+import '../../services/telemetry/telemetry_service.dart';
 import '../widgets/log_console.dart';
 import 'help_screen.dart';
 
@@ -25,23 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     textStyle: _menuTextStyle,
   );
 
-  String _buildVersion() {
-    const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
-    const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
-    const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
-
-    if (branch.startsWith('release/')) {
-      final version = branch.replaceFirst('release/', '');
-      return 'v$version-$buildDate-$buildId';
-    }
-    if (branch == 'main') {
-      return 'latest-$buildDate-$buildId';
-    }
-    return 'dev-$buildDate-$buildId';
-  }
-
   String _currentVersion() {
-    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(_buildVersion());
+    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(buildVersion);
     return match?.group(1) ?? '0.0.0';
   }
 
@@ -246,6 +233,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: GlobalState.useDailyBuild.value,
                 onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.stacked_line_chart),
+                title: const Text('匿名统计', style: _menuTextStyle),
+                subtitle: const Text('收集系统版本、运行时间等，可在此关闭'),
+                value: GlobalState.telemetryEnabled.value,
+                onChanged: (v) {
+                  setState(() => GlobalState.telemetryEnabled.value = v);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.visibility),
+                title: const Text('查看收集内容', style: _menuTextStyle),
+                onTap: _showTelemetryData,
+              ),
               ListTile(
                 leading: const Icon(Icons.system_update),
                 title: const Text('检查更新', style: _menuTextStyle),
@@ -267,7 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   showAboutDialog(
                     context: context,
                     applicationName: 'XStream',
-                    applicationVersion: _buildVersion(),
+                    applicationVersion: buildVersion,
                     applicationLegalese: '''
 © 2025 svc.plus
 
@@ -300,5 +301,25 @@ This application includes components from:
   void dispose() {
     _xrayMonitorTimer?.cancel();
     super.dispose();
+  }
+
+  void _showTelemetryData() {
+    final data = TelemetryService.collectData(appVersion: buildVersion);
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('收集内容'),
+        content: SingleChildScrollView(
+          child: SelectableText(json),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
   }
 }
