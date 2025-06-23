@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../widgets/log_console.dart';
 
 const String kUpdateBaseUrl = 'https://artifact.onwalk.net/';
-const String kTelemetryEndpoint = 'https://artifact.onwalk.net/telemetry';
 
 // LogConsole Global Key
 final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();

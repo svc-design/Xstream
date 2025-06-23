@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
 import '../../utils/native_bridge.dart';
@@ -254,10 +255,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
                   setState(() => GlobalState.telemetryEnabled.value = v);
-                  if (v) {
-                    TelemetryService.send(appVersion: _buildVersion());
-                  }
                 },
+              ),
+              ListTile(
+                leading: const Icon(Icons.visibility),
+                title: const Text('查看收集内容', style: _menuTextStyle),
+                onTap: _showTelemetryData,
               ),
               ListTile(
                 leading: const Icon(Icons.system_update),
@@ -313,5 +316,25 @@ This application includes components from:
   void dispose() {
     _xrayMonitorTimer?.cancel();
     super.dispose();
+  }
+
+  void _showTelemetryData() {
+    final data = TelemetryService.collectData(appVersion: _buildVersion());
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('收集内容'),
+        content: SingleChildScrollView(
+          child: SelectableText(json),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
   }
 }

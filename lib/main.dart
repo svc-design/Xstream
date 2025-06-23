@@ -22,7 +22,6 @@ void main(List<String> args) async {
   }
   await VpnConfig.load(); // ✅ 启动时加载 assets + 本地配置
   runApp(const MyApp());
-  TelemetryService.send(appVersion: _buildVersion());
 }
 
 String _buildVersion() {
