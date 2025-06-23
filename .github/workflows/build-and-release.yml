@@ -207,7 +207,6 @@ jobs:
           - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
           - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
           - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
-          - { name: windows-msix, file_pattern: '*.msix', remote_path: 'xstream-windows-latest/xstream-windows-latest.msix' }
           - { name: github, file_pattern: '**/*', remote_path: '' }
 
     steps:
@@ -245,6 +244,14 @@ jobs:
           FILE=$(find release-artifacts -name '${{ matrix.platform.file_pattern }}' | head -n 1)
           echo "Uploading $FILE to /mnt/data/update-server/${{ matrix.platform.remote_path }}"
           rsync -av "$FILE" root@"$VPS_HOST":/mnt/data/update-server/${{ matrix.platform.remote_path }} --delete
+
+          if [ "${{ matrix.platform.name }}" = "windows" ]; then
+            FILE_MSIX=$(find release-artifacts -name '*.msix' | head -n 1)
+            if [ -n "$FILE_MSIX" ]; then
+              echo "Uploading $FILE_MSIX to /mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.msix"
+              rsync -av "$FILE_MSIX" root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.msix --delete
+            fi
+          fi
 
   publish-stores:
     runs-on: ubuntu-latest
