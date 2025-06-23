@@ -1,6 +1,6 @@
 # 用户使用手册
 
-XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构建，提供流畅、可靠的网络连接体验。
+XStream 是一个用户友好的多节点网络加速客户端，基于 Xray-core 构建，提供流畅、可靠的网络连接体验。
 
 ## 初始化与配置
 
@@ -46,12 +46,12 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 
 ---
 
-## 步骤 4：添加自定义 VPN 节点配置
+## 步骤 4：添加自定义加速节点配置
 
 点击底部导航栏中的 `Subscriptions` 标签页，在添加页面中填写你自己的节点信息，例如：
 
-- 节点名（如 `Global-Proxy`）
-- 服务器域名（如 `global-proxy.onwalk.net`）
+- 节点名（如 `Global-Node`）
+- 服务器域名（如 `global-node.onwalk.net`）
 - 端口号（如 `1443`）
 - UUID（如 `18dxxxxx-xxxx-xxxx-xxxx-e7fxxxxx9b2`）
 
@@ -69,15 +69,15 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 此操作会根据选中的节点保存并应用配置到本地服务。
 
 
-### 设置浏览器代理插件
+### 配置浏览器加速插件
 
-使用 ZeroOmega 配置 Xray 代理。本指南假设你已经在本地或远程服务器上成功部署了 Xray-core，可在浏览器中通过 ZeroOmega 实现代理切换。
+使用 ZeroOmega 连接 Xray 节点。本指南假设你已经在本地或远程服务器上成功部署了 Xray-core，可在浏览器中通过 ZeroOmega 实现节点切换。
 
 1. 安装 ZeroOmega 插件（https://github.com/zero-peak/ZeroOmega）。  
    ZeroOmega 支持 Chrome Web Store、Microsoft Edge Addons、Firefox Addon，兼容 SwitchyOmega，基于 Manifest V3。
-2. 在 ZeroOmega 创建 Xray 代理配置：
+2. 在 ZeroOmega 创建 Xray 节点配置：
    - 情景模式名称：例如 Xray-SOCKS5
-   - 代理服务器类型：SOCKS5
+   - 服务器类型：SOCKS5
    - 服务器地址：127.0.0.1
    - 端口：1080
    - 保存配置。
@@ -86,14 +86,14 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
    - 规则示例：
      - *.google.com  --> 使用 Xray-SOCKS5
      - *.youtube.com --> 使用 Xray-SOCKS5
-   - 默认模式设置为「直连」，其余符合规则的域名通过 Xray 代理访问。
+   - 默认模式设置为「直连」，其余符合规则的域名通过 Xray 加速服务访问。
 4. 效果验证：
-   - 访问 https://www.google.com/ 等站点，确认是否已通过代理。
+   - 访问 https://www.google.com/ 等站点，确认是否已通过加速服务。
    - 也可通过浏览器访问 ip.sb 查询外网地址。
 
-### 启动代理服务
+### 启动加速服务
 
-1. 返回应用主界面，选择节点（如 🇺🇸 US-VPN）。
+1. 返回应用主界面，选择节点（如 🇺🇸 US-Node）。
 2. 点击启动/停止按钮控制服务。
 3. 可在“设置”页面查看实时日志信息。
 
@@ -104,6 +104,6 @@ XStream 是一个用户友好的多平台代理客户端，基于 Xray-core 构�
 - 若初始化按钮处于灰色，请先完成解锁。
 - 若权限认证失败，请检查系统用户是否具备管理员权限。
 - 日志中如显示路径无权限写入，请尝试以管理员身份运行程序。
-- 无法联网？请确认代理端口是否正确配置为 `1080`，且节点状态为“运行”。
+- 无法联网？请确认端口是否正确配置为 `1080`，且节点状态为“运行”。
 
 ---

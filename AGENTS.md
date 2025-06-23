@@ -1,6 +1,6 @@
 # Xstream Agents
 
-本文件描述了 Xstream 代理在不同平台、架构、版本下的支持能力与部署要求。
+本文件描述了 Xstream 加速组件在不同平台、架构、版本下的支持能力与部署要求。
 
 ---
 
@@ -28,7 +28,7 @@
 | Sniffing     | ✅        | Domain, TLS, HTTP Headers        |
 | GeoIP / CNIP | ✅        | IP Database Based                |
 | Multi-Profile| ✅        | 支持多配置切换                    |
-| PAC/Auto Mode| ✅        | 自动代理模式                     |
+| PAC/Auto Mode| ✅        | 自动加速模式                     |
 | Native Tray  | ✅        | 平台原生托盘图标支持             |
 | Auto Update  | ✅        | 自动升级（实验性）               |
 | Logging      | ✅        | 全局及单任务日志                 |
@@ -54,7 +54,7 @@
 
 ## Configuration Schema
 
-所有代理配置遵循内部模板生成系统：
+所有配置遵循内部模板生成系统：
 
 - 内嵌 Xray JSON 模板
 - 支持动态端口绑定

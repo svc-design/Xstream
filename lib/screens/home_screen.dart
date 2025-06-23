@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Theme.of(context).platform == TargetPlatform.windows;
 
             final content = vpnNodes.isEmpty
-                ? const Center(child: Text('暂无 VPN 节点，请先添加。'))
+                ? const Center(child: Text('暂无加速节点，请先添加。'))
                 : ListView.builder(
                     itemCount: vpnNodes.length,
                     itemBuilder: (context, index) {

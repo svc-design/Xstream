@@ -150,9 +150,9 @@ class VpnConfig {
     const port = '1443';
     const uuid = '18d270a9-533d-4b13-b3f1-e7f55540a9b2';
     const nodes = [
-      {'name': 'US-VPN', 'domain': 'us-connector.onwalk.net'},
-      {'name': 'CA-VPN', 'domain': 'ca-connector.onwalk.net'},
-      {'name': 'JP-VPN', 'domain': 'tky-connector.onwalk.net'},
+      {'name': 'US-Node', 'domain': 'us-connector.onwalk.net'},
+      {'name': 'CA-Node', 'domain': 'ca-connector.onwalk.net'},
+      {'name': 'JP-Node', 'domain': 'tky-connector.onwalk.net'},
     ];
 
     for (final node in nodes) {
@@ -287,7 +287,7 @@ class VpnConfig {
     Function(String) logMessage,
   ) async {
     if (nodeName.trim().isEmpty || nodeCode.trim().isEmpty || serviceName.trim().isEmpty || xrayConfigPath.trim().isEmpty) {
-        const err = 'VPN 节点信息不完整，无法生成 JSON 配置';
+        const err = '节点信息不完整，无法生成 JSON 配置';
       setMessage('❌ $err');
       logMessage(err);
       return '';

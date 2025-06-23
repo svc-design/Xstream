@@ -84,7 +84,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('添加 VPN 节点配置'),
+        title: const Text('添加加速节点配置'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,7 +93,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           children: [
             TextField(
               controller: _nodeNameController,
-              decoration: const InputDecoration(labelText: '节点名（如 US-VPN）'),
+              decoration: const InputDecoration(labelText: '节点名（如 US-Node）'),
             ),
             const SizedBox(height: 12),
             TextField(
