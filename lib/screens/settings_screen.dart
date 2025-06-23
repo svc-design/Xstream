@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../utils/global_config.dart' show GlobalState, buildVersion;
+import '../../utils/global_config.dart' show GlobalState, buildVersion, logConsoleKey;
 import '../../utils/native_bridge.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
