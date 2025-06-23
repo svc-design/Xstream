@@ -1,3 +1,16 @@
+# XStream v0.2.0 - Windows Release
+
+_Release Date: 2025-06-10_
+
+## ✨ Features
+- Windows platform support with service-based deployment
+- Packaging includes automatic service registration for background running
+- Integrated Bridge Windows module for one-click start and recovery
+
+## ✅ Changes
+- Verified config.json and Task Scheduler deployment
+- Passed multi-region switch and proxy tests on Windows
+
 # XStream v0.1.4 - macOS Tray Support
 
 _Release Date: 2025-06-09_
