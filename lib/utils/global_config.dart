@@ -9,6 +9,29 @@ const String kUpdateBaseUrl = 'https://artifact.onwalk.net/';
 // LogConsole Global Key
 final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();
 
+/// 当前构建版本号，可在应用各处引用
+final String buildVersion = (() {
+  const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
+  const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
+  const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
+
+  if (branch.startsWith('release/')) {
+    final version = branch.replaceFirst('release/', '');
+    return 'v$version-$buildDate-$buildId';
+  }
+  if (branch == 'main') {
+    return 'latest-$buildDate-$buildId';
+  }
+  return 'dev-$buildDate-$buildId';
+})();
+
+/// 基础系统信息，用于匿名统计等场景
+Map<String, String> collectSystemInfo() => {
+      'os': Platform.operatingSystem,
+      'osVersion': Platform.operatingSystemVersion,
+      'dartVersion': Platform.version,
+    };
+
 /// 全局应用状态管理（使用 ValueNotifier 实现响应式绑定）
 class GlobalState {
   /// 解锁状态（true 表示已解锁）

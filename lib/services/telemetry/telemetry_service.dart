@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../utils/global_config.dart';
+import '../../utils/global_config.dart'
+    show GlobalState, collectSystemInfo;
 
 class TelemetryService {
   static const _prefsKey = 'telemetryEnabled';
@@ -17,11 +17,10 @@ class TelemetryService {
   }
 
   static Map<String, dynamic> collectData({required String appVersion}) {
+    final system = collectSystemInfo();
     return {
       'appVersion': appVersion,
-      'os': Platform.operatingSystem,
-      'osVersion': Platform.operatingSystemVersion,
-      'dartVersion': Platform.version,
+      ...system,
       'uptime': DateTime.now().difference(_startTime).inSeconds,
     };
   }

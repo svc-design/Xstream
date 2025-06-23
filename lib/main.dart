@@ -6,7 +6,7 @@ import 'screens/subscription_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart';
+import 'utils/global_config.dart' show GlobalState;
 import 'services/telemetry/telemetry_service.dart';
 import 'widgets/log_console.dart';
 import 'services/vpn_config_service.dart';
@@ -24,20 +24,6 @@ void main(List<String> args) async {
   runApp(const MyApp());
 }
 
-String _buildVersion() {
-  const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
-  const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
-  const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
-
-  if (branch.startsWith('release/')) {
-    final version = branch.replaceFirst('release/', '');
-    return 'v$version-$buildDate-$buildId';
-  }
-  if (branch == 'main') {
-    return 'latest-$buildDate-$buildId';
-  }
-  return 'dev-$buildDate-$buildId';
-}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
