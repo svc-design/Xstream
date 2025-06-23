@@ -173,6 +173,12 @@ jobs:
         run: |
           ./build_scripts/package_windows_bundle.ps1
 
+      - name: Build MSIX package
+        if: ${{ matrix.platform == 'windows' }}
+        shell: powershell
+        run: |
+          ./build_scripts/package_windows_msix.ps1
+
       - name: Zip iOS Runner.app
         if: ${{ matrix.platform == 'ios' }}
         run: |
@@ -188,6 +194,7 @@ jobs:
             build/linux/x64/release/bundle/xstream-linux.zip
             build/linux/x64/release/AppImage/xstream-linux.AppImage
             build/windows/x64/runner/Release/xstream-windows.zip
+            build/windows/x64/runner/Release/*.msix
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
 
@@ -237,6 +244,14 @@ jobs:
           FILE=$(find release-artifacts -name '${{ matrix.platform.file_pattern }}' | head -n 1)
           echo "Uploading $FILE to /mnt/data/update-server/${{ matrix.platform.remote_path }}"
           rsync -av "$FILE" root@"$VPS_HOST":/mnt/data/update-server/${{ matrix.platform.remote_path }} --delete
+
+          if [ "${{ matrix.platform.name }}" = "windows" ]; then
+            FILE_MSIX=$(find release-artifacts -name '*.msix' | head -n 1)
+            if [ -n "$FILE_MSIX" ]; then
+              echo "Uploading $FILE_MSIX to /mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.msix"
+              rsync -av "$FILE_MSIX" root@"$VPS_HOST":/mnt/data/update-server/xstream-windows-latest/xstream-windows-latest.msix --delete
+            fi
+          fi
 
   publish-stores:
     runs-on: ubuntu-latest
