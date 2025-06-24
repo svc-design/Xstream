@@ -41,6 +41,7 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+- 📱 [iOS 设计文档](docs/ios-design.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 计划任务运行指南](docs/windows-task-scheduler.md)
 
@@ -74,6 +75,16 @@ flutter build linux --release -v
 
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 此外，系统托盘功能依赖 `libayatana-appindicator3-dev`（旧发行版可安装 `libappindicator3-dev`）。若缺失该库，`go build` 会因 `pkg-config` 找不到 `ayatana-appindicator3-0.1` 而报错。
+
+## 🍎 iOS 构建须知
+
+要在 iOS 上运行 XStream，需要将官方 xray-core 编译为静态库：
+
+```bash
+./build_scripts/build_ios_xray.sh
+```
+
+脚本会将仓库克隆到 `build/xray-src`，并使用 `GOOS=ios GOARCH=arm64` 构建 `libxray-core.a`，输出目录为 `ios/Frameworks/`。完成后即可在 Xcode 项目中链接该静态库。
 
 ## 🪟 Windows 构建须知
 
