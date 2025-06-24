@@ -145,7 +145,11 @@ jobs:
       - name: Build iOS IPA
         if: ${{ matrix.platform == 'ios' }}
         shell: bash
-        run: flutter build ipa --release --no-codesign
+        run: |
+          flutter build ipa --release --no-codesign
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload
+          (cd build/ios/ipa && zip -r XStream.ipa Payload)
 
       - name: Build macOS App
         if: ${{ matrix.platform == 'macos' }}
