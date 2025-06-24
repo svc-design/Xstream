@@ -41,6 +41,7 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+- 📱 [iOS 设计文档](docs/ios-design.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 计划任务运行指南](docs/windows-task-scheduler.md)
 
@@ -74,6 +75,16 @@ flutter build linux --release -v
 
 依赖 ImageMagick，若未安装请先安装 `convert` 命令。
 此外，系统托盘功能依赖 `libayatana-appindicator3-dev`（旧发行版可安装 `libappindicator3-dev`）。若缺失该库，`go build` 会因 `pkg-config` 找不到 `ayatana-appindicator3-0.1` 而报错。
+
+## 🍎 iOS 构建须知
+
+要在 iOS 上运行 XStream，需要将官方 xray-core 编译为静态库：
+
+```bash
+./build_scripts/build_ios_xray.sh
+```
+
+脚本会将仓库克隆到 `build/xray-src`，并调用 `xcrun` 获取 iOS SDK 的 `clang` 与系统路径，随后以 `GOOS=ios GOARCH=arm64` 模式编译生成 `libxray-core.a`，输出至 `ios/Frameworks/` 目录，可直接在 Xcode 中引用。网络流量通过自带的 `PacketTunnel` 扩展接入系统 VPN，实现全局代理。
 
 ## 🪟 Windows 构建须知
 
