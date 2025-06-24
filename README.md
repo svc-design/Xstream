@@ -85,6 +85,7 @@ flutter build linux --release -v
 ```
 
 脚本会将仓库克隆到 `build/xray-src`，并使用 `GOOS=ios GOARCH=arm64` 构建 `libxray-core.a`，输出目录为 `ios/Frameworks/`。完成后即可在 Xcode 项目中链接该静态库。
+链接后可通过 `StartXray`/`StopXray` C 接口在原生层启动或关闭代理实例。
 
 ## 🪟 Windows 构建须知
 
