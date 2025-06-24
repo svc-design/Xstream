@@ -26,9 +26,10 @@
 
 ## xray-core 集成
 
-1. 使用 `GOOS=ios GOARCH=arm64` 方式将 xray-core 编译为静态库 `libxray.a`，并在 Xcode 中链接。
-2. Swift 侧通过 FFI 调用静态库导出的 C 接口启动或停止代理进程。
-3. 若需要调试，可在模拟器上使用 `GOARCH=arm64` 构建并运行。
+1. 在项目根目录运行 `./build_scripts/build_ios_xray.sh`，自动克隆并编译 xray-core 为 `libxray-core.a`。
+2. 将生成的静态库放入 Xcode 的 `Frameworks` 目录并链接。
+3. Swift 侧通过 FFI 调用静态库导出的 C 接口启动或停止代理进程。
+4. 若需要调试，可在模拟器上使用 `GOARCH=arm64` 构建并运行。
 
 ## 配置能力
 
