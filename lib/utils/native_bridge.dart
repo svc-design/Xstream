@@ -9,7 +9,8 @@ class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
 
-  static final bool _useFfi = Platform.isWindows || Platform.isLinux;
+  static final bool _useFfi =
+      Platform.isWindows || Platform.isLinux || Platform.isIOS;
   static BridgeBindings? _bindings;
 
   static bool get _isDesktop =>
@@ -25,6 +26,8 @@ class NativeBridge {
       return ffi.DynamicLibrary.open('libgo_native_bridge.dll');
     } else if (Platform.isLinux) {
       return ffi.DynamicLibrary.open('libgo_native_bridge.so');
+    } else if (Platform.isIOS) {
+      return ffi.DynamicLibrary.process();
     }
     throw UnsupportedError('Unsupported platform');
   }
