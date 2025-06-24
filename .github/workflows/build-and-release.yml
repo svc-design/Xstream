@@ -142,6 +142,15 @@ jobs:
         shell: bash
         run: flutter build ios --release --no-codesign
 
+      - name: Build iOS IPA
+        if: ${{ matrix.platform == 'ios' }}
+        shell: bash
+        run: |
+          flutter build ipa --release --no-codesign
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload
+          (cd build/ios/ipa && zip -r XStream.ipa Payload)
+
       - name: Build macOS App
         if: ${{ matrix.platform == 'macos' }}
         shell: bash
@@ -197,6 +206,7 @@ jobs:
             build/windows/x64/runner/Release/*.msix
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
+            build/ios/ipa/*.ipa
 
   release:
     runs-on: ubuntu-latest
@@ -207,6 +217,8 @@ jobs:
           - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream-macos-latest/xstream-macos-latest.dmg' }
           - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream-linux-latest/xstream-linux-latest.zip' }
           - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream-windows-latest/xstream-windows-latest.zip' }
+          - { name: ios, file_pattern: '*.ipa', remote_path: 'xstream-ios-latest/xstream-ios-latest.ipa' }
+          - { name: android, file_pattern: 'app-release.apk', remote_path: 'xstream-android-latest/xstream-android-latest.apk' }
           - { name: github, file_pattern: '**/*', remote_path: '' }
 
     steps:
