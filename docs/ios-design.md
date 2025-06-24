@@ -6,9 +6,9 @@
 
 ```
 ┌──────────────────────────────┐
-│       FoXray iOS App         │
+│       iOS App         │
 │ ┌──────────────────────────┐ │
-│ │ Swift / Flutter 前端界面 │ │
+│ │ Flutter 前端界面 │ │
 │ └────────────┬─────────────┘ │
 │              │               │
 │ ┌────────────▼────────────┐  │
@@ -33,7 +33,7 @@
 
 ## 配置能力
 
-- 支持导入 VLESS、VMess、Reality、Trojan 等协议节点。
+- 支持导入 VLESS、Reality、协议节点。
 - Flutter 端根据用户输入生成标准 xray JSON 配置，调用 `writeConfigFiles` 写入沙箱目录。
 - 配置文件示例位于 `~/Library/Application Support/Xstream/`（模拟器路径）下。
 
