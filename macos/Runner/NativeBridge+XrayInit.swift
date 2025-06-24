@@ -94,9 +94,9 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
 
     let urlString: String
     if arch == "arm64" {
-      urlString = "http://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-arm64-v8a.zip"
+      urlString = "https://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-arm64-v8a.zip"
     } else {
-      urlString = "http://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-64.zip"
+      urlString = "https://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-64.zip"
     }
 
     guard let url = URL(string: urlString) else {
