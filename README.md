@@ -84,7 +84,10 @@ flutter build linux --release -v
 ./build_scripts/build_ios_xray.sh
 ```
 
+codex/编译-xray-core-为-ios-静态库脚本会将仓库克隆到 `build/xray-src`，并使用 `GOOS=ios GOARCH=arm64` 构建 `libxray-core.a`，输出目录为 `ios/Frameworks/`。完成后即可在 Xcode 项目中链接该静态库。
+链接后可通过 `StartXray`/`StopXray` C 接口在原生层启动或关闭代理实例。
 脚本会在 `build/ios` 目录生成 `libxray.a` 与 `libxray.h`，需在 Xcode 项目中链接该静态库。Flutter 端通过 Dart FFI 直接调用 `StartXray` 与 `StopXray` 控制代理实例，无需额外的 Swift 桥接代码。
+
 
 ## 🪟 Windows 构建须知
 

@@ -124,10 +124,24 @@ func CheckNodeStatus(name *C.char) C.int {
 func StartXray(configC *C.char) *C.char {
 	instMu.Lock()
 	defer instMu.Unlock()
+
+	if singleInstance != nil {
+		return C.CString("error:already running")
+	}
 	cfgData := []byte(C.GoString(configC))
-	if err := startXrayInternal(cfgData); err != nil {
+	cfg, err := core.LoadConfig("json", bytes.NewReader(cfgData))
+	if err != nil {
 		return C.CString("error:" + err.Error())
 	}
+	srv, err := core.New(cfg)
+	if err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	if err := srv.Start(); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	singleInstance = &xrayInstance{server: srv}
+
 	return C.CString("success")
 }
 
@@ -135,9 +149,19 @@ func StartXray(configC *C.char) *C.char {
 func StopXray() *C.char {
 	instMu.Lock()
 	defer instMu.Unlock()
+
+	if singleInstance == nil {
+		return C.CString("error:not running")
+	}
+	if err := singleInstance.server.Close(); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	singleInstance = nil
+
 	if err := stopXrayInternal(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
+
 	return C.CString("success")
 }
 
