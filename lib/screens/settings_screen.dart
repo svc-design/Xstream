@@ -57,10 +57,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
+    // 初始化、更新核心并生成默认节点的完整流程实现详见
+    // docs/xray-management-design.md
+
     logConsoleKey.currentState?.addLog('开始初始化 Xray...');
     try {
-      final output = await NativeBridge.initXray();
-      logConsoleKey.currentState?.addLog(output);
+      final init = await NativeBridge.initXray();
+      logConsoleKey.currentState?.addLog(init);
+
+      logConsoleKey.currentState?.addLog('开始更新 Xray Core...');
+      final upd = await NativeBridge.updateXrayCore();
+      logConsoleKey.currentState?.addLog(upd);
+      if (upd.startsWith('info:')) {
+        GlobalState.xrayUpdating.value = true;
+        await _waitForDownload();
+      }
+
+      logConsoleKey.currentState?.addLog('生成默认节点...');
+      final pwd = GlobalState.sudoPassword.value;
+      await VpnConfig.generateDefaultNodes(
+        password: pwd,
+        setMessage: (m) => logConsoleKey.currentState?.addLog(m),
+        logMessage: (m) => logConsoleKey.currentState?.addLog(m),
+      );
     } catch (e) {
       logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
     }
@@ -96,6 +115,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _xrayMonitorTimer?.cancel();
       }
     });
+  }
+
+  Future<void> _waitForDownload() async {
+    while (await NativeBridge.isXrayDownloading()) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
+    GlobalState.xrayUpdating.value = false;
   }
 
   void _onResetAll() async {
