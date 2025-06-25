@@ -8,6 +8,7 @@ package main
 import "C"
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -22,6 +23,36 @@ var instMu sync.Mutex
 
 type xrayInstance struct {
 	server core.Server
+}
+
+func startXrayInternal(cfgData []byte) error {
+	if singleInstance != nil {
+		return errors.New("already running")
+	}
+	cfg, err := core.LoadConfig("json", bytes.NewReader(cfgData))
+	if err != nil {
+		return err
+	}
+	srv, err := core.New(cfg)
+	if err != nil {
+		return err
+	}
+	if err := srv.Start(); err != nil {
+		return err
+	}
+	singleInstance = &xrayInstance{server: srv}
+	return nil
+}
+
+func stopXrayInternal() error {
+	if singleInstance == nil {
+		return errors.New("not running")
+	}
+	if err := singleInstance.server.Close(); err != nil {
+		return err
+	}
+	singleInstance = nil
+	return nil
 }
 
 //export WriteConfigFiles
@@ -93,6 +124,7 @@ func CheckNodeStatus(name *C.char) C.int {
 func StartXray(configC *C.char) *C.char {
 	instMu.Lock()
 	defer instMu.Unlock()
+
 	if singleInstance != nil {
 		return C.CString("error:already running")
 	}
@@ -109,6 +141,7 @@ func StartXray(configC *C.char) *C.char {
 		return C.CString("error:" + err.Error())
 	}
 	singleInstance = &xrayInstance{server: srv}
+
 	return C.CString("success")
 }
 
@@ -116,6 +149,7 @@ func StartXray(configC *C.char) *C.char {
 func StopXray() *C.char {
 	instMu.Lock()
 	defer instMu.Unlock()
+
 	if singleInstance == nil {
 		return C.CString("error:not running")
 	}
@@ -123,6 +157,11 @@ func StopXray() *C.char {
 		return C.CString("error:" + err.Error())
 	}
 	singleInstance = nil
+
+	if err := stopXrayInternal(); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+
 	return C.CString("success")
 }
 
