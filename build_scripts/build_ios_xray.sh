@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 set -e
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
-REPO_DIR="$DIR/build/xray-src"
-OUTPUT_DIR="$DIR/ios/Frameworks"
-
-if [ ! -d "$REPO_DIR" ]; then
-  echo ">>> Cloning xray-core..."
-  git clone https://github.com/XTLS/Xray-core "$REPO_DIR"
-fi
-
-cd "$REPO_DIR"
-
-echo ">>> Fetching Go modules..."
-go mod download
+OUTPUT_DIR="$DIR/build/ios"
 
 mkdir -p "$OUTPUT_DIR"
 
-echo ">>> Building static library..."
-GOOS=ios GOARCH=arm64 CGO_ENABLED=1 go build -tags jsoniter -buildmode=c-archive -o "$OUTPUT_DIR/libxray-core.a" ./main
+cd "$DIR/go_core"
 
-echo ">>> Output: $OUTPUT_DIR/libxray-core.a"
+echo ">>> Building iOS static library..."
+
+export CGO_ENABLED=1
+export GOOS=ios
+export GOARCH=arm64
+export CC="$(xcrun --sdk iphoneos --find clang)"
+export CGO_CFLAGS="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)"
+
+go mod tidy
+go build -buildmode=c-archive -o "$OUTPUT_DIR/libxray.a" ./bridge_ios.go
+
+echo ">>> Output: $OUTPUT_DIR/libxray.a"

@@ -285,4 +285,28 @@ class NativeBridge {
       }
     }
   }
+
+  /// Start embedded xray-core via FFI on iOS
+  static String startXray(String configJson) {
+    if (!_useFfi) {
+      throw UnsupportedError('FFI not available');
+    }
+    final conf = configJson.toNativeUtf8();
+    final resPtr = _ffi.startXray(conf.cast());
+    final result = resPtr.cast<Utf8>().toDartString();
+    _ffi.freeCString(resPtr);
+    malloc.free(conf);
+    return result;
+  }
+
+  /// Stop embedded xray-core instance on iOS
+  static String stopXray() {
+    if (!_useFfi) {
+      throw UnsupportedError('FFI not available');
+    }
+    final resPtr = _ffi.stopXray();
+    final result = resPtr.cast<Utf8>().toDartString();
+    _ffi.freeCString(resPtr);
+    return result;
+  }
 }
