@@ -259,18 +259,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: GlobalState.useDailyBuild.value,
                 onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
               ),
-              SwitchListTile(
-                secondary: const Icon(Icons.stacked_line_chart),
-                title: const Text('匿名统计', style: _menuTextStyle),
-                subtitle: const Text('收集系统版本、运行时间等，可在此关闭'),
-                value: GlobalState.telemetryEnabled.value,
-                onChanged: (v) {
-                  setState(() => GlobalState.telemetryEnabled.value = v);
-                },
-              ),
               ListTile(
-                leading: const Icon(Icons.visibility),
+                leading: const Icon(Icons.stacked_line_chart),
                 title: const Text('查看收集内容', style: _menuTextStyle),
+                trailing: Switch(
+                  value: GlobalState.telemetryEnabled.value,
+                  onChanged: (v) => setState(() => GlobalState.telemetryEnabled.value = v),
+                ),
                 onTap: _showTelemetryData,
               ),
               ListTile(
