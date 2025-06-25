@@ -8,5 +8,5 @@ export CGO_ENABLED=1
 
 export CC=x86_64-w64-mingw32-gcc
 GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -buildmode=c-shared \
-  -ldflags="-linkmode external -extldflags '-static'" \
+  -ldflags="-s -w -linkmode external -extldflags '-static'" \
   -o ../bindings/libgo_native_bridge.dll
