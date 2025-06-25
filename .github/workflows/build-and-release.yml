@@ -129,13 +129,13 @@ jobs:
         run: flutter test --reporter expanded
         continue-on-error: true
 
-        - name: Build Android App
-          if: ${{ matrix.platform == 'android' }}
-          shell: bash
-          run: |
-            flutter pub get
-            dart run flutter_launcher_icons
-            flutter build apk --release --split-per-abi --tree-shake-icons
+      - name: Build Android App
+        if: ${{ matrix.platform == 'android' }}
+        shell: bash
+        run: |
+          flutter pub get
+          dart run flutter_launcher_icons
+          flutter build apk --release --split-per-abi --tree-shake-icons
 
       - name: Build iOS App
         if: ${{ matrix.platform == 'ios' }}
