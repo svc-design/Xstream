@@ -184,10 +184,13 @@ func StartNodeService(name *C.char) *C.char {
 		}
 	}
 
-	// 立即运行任务
-	if out, err := exec.Command("schtasks", "/Run", "/TN", serviceName).CombinedOutput(); err != nil {
+	// 立即后台运行任务
+	cmd := exec.Command("schtasks", "/Run", "/TN", serviceName)
+	if err := cmd.Start(); err != nil {
+		out, _ := cmd.CombinedOutput()
 		return C.CString("error:" + string(out))
 	}
+	go cmd.Wait()
 	return C.CString("success")
 }
 
