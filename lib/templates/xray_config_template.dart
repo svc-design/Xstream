@@ -24,7 +24,7 @@ const String defaultXrayJsonTemplate = r'''
     },
     {
       "listen": "127.0.0.1",
-      "port": 10801,
+      "port": 1081,
       "protocol": "http",
       "sniffing": {
         "enabled": true,

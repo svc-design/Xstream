@@ -159,6 +159,7 @@ do shell script "\(escaped)" with administrator privileges
   func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
   let rawShell = """
 set -e
+launchctl remove com.xstream.xray-node-trial || true
 launchctl remove com.xstream.xray-node-jp || true
 launchctl remove com.xstream.xray-node-ca || true
 launchctl remove com.xstream.xray-node-us || true
