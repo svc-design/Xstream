@@ -150,9 +150,7 @@ class VpnConfig {
     const port = '1443';
     const uuid = '18d270a9-533d-4b13-b3f1-e7f55540a9b2';
     const nodes = [
-      {'name': 'US-Node', 'domain': 'us-connector.onwalk.net'},
-      {'name': 'CA-Node', 'domain': 'ca-connector.onwalk.net'},
-      {'name': 'JP-Node', 'domain': 'tky-connector.onwalk.net'},
+      {'name': 'Global-Node', 'domain': 'trial-connector.onwalk.net'},
     ];
 
     for (final node in nodes) {
