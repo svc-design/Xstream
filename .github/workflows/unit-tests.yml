@@ -1,0 +1,42 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.32.2'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install Linux deps
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y clang pkg-config libx11-dev libayatana-appindicator3-dev
+
+      - name: Run Flutter unit tests
+        run: flutter test --coverage
+
+      - name: Run Go tests
+        run: go test ./go_core/...
+
+      - name: Run macOS Swift tests
+        if: matrix.os == 'macos-latest'
+        run: xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -destination 'platform=macOS' test
