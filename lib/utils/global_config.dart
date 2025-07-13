@@ -51,6 +51,10 @@ class GlobalState {
 
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
+
+  /// 当前连接模式，可在底部弹出栏中切换（如 VPN / 仅代理）
+  static final ValueNotifier<String> connectionMode =
+      ValueNotifier<String>('VPN');
 }
 
 /// 用于获取应用相关的配置信息
