@@ -330,10 +330,10 @@ This application includes components from:
           ),
         ),
         const VerticalDivider(width: 1),
-        Expanded(
+        const Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: const Center(child: Text('请选择左侧菜单')),
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: Text('请选择左侧菜单')),
           ),
         ),
       ],
