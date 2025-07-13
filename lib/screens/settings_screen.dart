@@ -7,7 +7,7 @@ import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
 import '../../services/telemetry/telemetry_service.dart';
-
+import '../widgets/log_console.dart' show LogLevel;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
