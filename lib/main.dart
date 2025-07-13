@@ -9,6 +9,7 @@ import 'screens/about_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
 import 'utils/native_bridge.dart';
+import 'widgets/log_console.dart';
 import 'utils/global_config.dart' show GlobalState, logConsoleKey, buildVersion;
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
