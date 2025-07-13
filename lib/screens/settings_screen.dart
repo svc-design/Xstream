@@ -331,7 +331,7 @@ This application includes components from:
         ),
         const VerticalDivider(width: 1),
         const Expanded(
-          child: const Padding(
+          child: Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: Text('请选择左侧菜单')),
           ),
