@@ -7,8 +7,7 @@ import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
 import '../../services/telemetry/telemetry_service.dart';
-import '../widgets/log_console.dart';
-import 'help_screen.dart';
+import '../widgets/log_console.dart' show LogLevel;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,7 +17,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedTab = 'log';
   Timer? _xrayMonitorTimer;
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
@@ -288,16 +286,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(height: 32),
-              ListTile(
-                leading: const Icon(Icons.article),
-                title: const Text('📜 查看日志', style: _menuTextStyle),
-                selected: _selectedTab == 'log',
-                onTap: () {
-                  setState(() {
-                    _selectedTab = 'log';
-                  });
-                },
-              ),
               SwitchListTile(
                 secondary: const Icon(Icons.bolt),
                 title: const Text('升级 DailyBuild', style: _menuTextStyle),
@@ -317,15 +305,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: const Icon(Icons.system_update),
                 title: const Text('检查更新', style: _menuTextStyle),
                 onTap: _onCheckUpdate,
-              ),
-              ListTile(
-                leading: const Icon(Icons.help),
-                title: const Text('帮助', style: _menuTextStyle),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HelpScreen()),
-                  );
-                },
               ),
               ListTile(
                 leading: const Icon(Icons.info),
@@ -354,9 +333,7 @@ This application includes components from:
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: _selectedTab == 'log'
-                ? LogConsole(key: logConsoleKey)
-                : const Center(child: Text('请选择左侧菜单')),
+            child: const Center(child: Text('请选择左侧菜单')),
           ),
         ),
       ],
