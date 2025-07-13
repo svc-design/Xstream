@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
-import 'screens/config_options_screen.dart';
 import 'screens/logs_screen.dart';
+import 'screens/help_screen.dart';
 import 'screens/about_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
@@ -159,9 +159,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     final pages = <Widget>[
       const HomeScreen(),
       const SubscriptionScreen(),
-      const ConfigOptionsScreen(),
       const SettingsScreen(),
       const LogsScreen(),
+      const HelpScreen(),
       const AboutScreen(),
     ];
 
@@ -194,9 +194,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
             destinations: const [
               NavigationRailDestination(icon: Icon(Icons.home), label: Text('首页')),
               NavigationRailDestination(icon: Icon(Icons.link), label: Text('代理')),
-              NavigationRailDestination(icon: Icon(Icons.tune), label: Text('配置选项')),
               NavigationRailDestination(icon: Icon(Icons.settings), label: Text('设置')),
               NavigationRailDestination(icon: Icon(Icons.article), label: Text('日志')),
+              NavigationRailDestination(icon: Icon(Icons.help), label: Text('帮助')),
               NavigationRailDestination(icon: Icon(Icons.info), label: Text('关于')),
             ],
           ),
