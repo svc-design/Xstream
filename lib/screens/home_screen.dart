@@ -38,13 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _reloadNodes() async {
-    await VpnConfig.load();
-    if (!mounted) return;
-    setState(() {
-      vpnNodes = VpnConfig.nodes;
-    });
-  }
 
   Future<void> _toggleNode(VpnNode node) async {
     final nodeName = node.name.trim();
