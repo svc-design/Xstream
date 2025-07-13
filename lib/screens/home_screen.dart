@@ -16,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
   List<VpnNode> vpnNodes = [];
   final Set<String> _selectedNodeNames = {};
-  bool _isLoading = false;
 
   void _showMessage(String msg, {Color? bgColor}) {
     if (!mounted) return;
@@ -32,22 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeConfig() async {
-    setState(() => _isLoading = true);
     await VpnConfig.load();
     if (!mounted) return;
     setState(() {
       vpnNodes = VpnConfig.nodes;
-      _isLoading = false;
     });
   }
 
   Future<void> _reloadNodes() async {
-    setState(() => _isLoading = true);
     await VpnConfig.load();
     if (!mounted) return;
     setState(() {
       vpnNodes = VpnConfig.nodes;
-      _isLoading = false;
     });
   }
 
@@ -55,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
 
-    setState(() => _isLoading = true);
+    // start or stop node service
 
     if (_activeNode == nodeName) {
       final msg = await NativeBridge.stopNodeService(nodeName);
@@ -73,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (isRunning) {
         setState(() => _activeNode = nodeName);
         _showMessage('⚠️ 服务已在运行');
-        setState(() => _isLoading = false);
         return;
       }
 
@@ -83,24 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _showMessage(msg);
     }
 
-    setState(() => _isLoading = false);
   }
 
-  Future<void> _deleteSelectedNodes() async {
-    setState(() => _isLoading = true);
-
-    final toDelete = vpnNodes.where((e) => _selectedNodeNames.contains(e.name)).toList();
-    for (final node in toDelete) {
-      await VpnConfig.deleteNodeFiles(node);
-    }
-    _selectedNodeNames.clear();
-    await _reloadNodes();
-    if (!mounted) return;
-
-    _showMessage('✅ 已删除 ${toDelete.length} 个节点并更新配置');
-
-    setState(() => _isLoading = false);
-  }
 
   @override
   Widget build(BuildContext context) {
