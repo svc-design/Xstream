@@ -32,7 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ButtonStyle? style,
   }) {
     return SizedBox(
-      width: 160,
+      width: double.infinity,
       child: ElevatedButton.icon(
         style: style ?? _menuButtonStyle,
         icon: Icon(icon),
@@ -200,128 +200,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // 左侧菜单栏
-        Container(
-          width: 220,
-          color: Colors.grey[100],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  '⚙️ 设置中心',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: GlobalState.isUnlocked,
-                  builder: (context, isUnlocked, _) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSection('Xray 管理', [
-                          _buildButton(
-                              icon: Icons.build,
-                              label: '初始化 Xray',
-                              onPressed: isUnlocked ? _onInitXray : null),
-                          _buildButton(
-                              icon: Icons.update,
-                              label: '更新 Xray Core',
-                              onPressed: isUnlocked ? _onUpdateXray : null),
-                          ValueListenableBuilder<bool>(
-                            valueListenable: GlobalState.xrayUpdating,
-                            builder: (context, downloading, _) {
-                              return downloading
-                                  ? const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 4),
-                                      child: LinearProgressIndicator(),
-                                    )
-                                  : const SizedBox.shrink();
-                            },
-                          ),
-                        ]),
-                        _buildSection('配置管理', [
-                          _buildButton(
-                              icon: Icons.settings,
-                              label: '生成默认节点',
-                              onPressed:
-                                  isUnlocked ? _onGenerateDefaultNodes : null),
-                          _buildButton(
-                              icon: Icons.restore,
-                              label: '重置所有配置',
-                              style: _menuButtonStyle.copyWith(
-                                  backgroundColor:
-                                      WidgetStateProperty.all(Colors.red[400])),
-                              onPressed: isUnlocked ? _onResetAll : null),
-                          _buildButton(
-                              icon: Icons.sync,
-                              label: '同步配置',
-                              onPressed: isUnlocked ? _onSyncConfig : null),
-                          _buildButton(
-                              icon: Icons.delete_forever,
-                              label: '删除配置',
-                              onPressed: isUnlocked ? _onDeleteConfig : null),
-                          _buildButton(
-                              icon: Icons.save,
-                              label: '保存配置',
-                              onPressed: isUnlocked ? _onSaveConfig : null),
-                        ]),
-                        if (!isUnlocked)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              '请先解锁以执行初始化操作',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              const Divider(height: 32),
-              SwitchListTile(
-                secondary: const Icon(Icons.bolt),
-                title: const Text('升级 DailyBuild', style: _menuTextStyle),
-                value: GlobalState.useDailyBuild.value,
+    return Container(
+      color: Colors.grey[100],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '⚙️ 设置中心',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<bool>(
+              valueListenable: GlobalState.isUnlocked,
+              builder: (context, isUnlocked, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSection('Xray 管理', [
+                      _buildButton(
+                        icon: Icons.build,
+                        label: '初始化 Xray',
+                        onPressed: isUnlocked ? _onInitXray : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.update,
+                        label: '更新 Xray Core',
+                        onPressed: isUnlocked ? _onUpdateXray : null,
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: GlobalState.xrayUpdating,
+                        builder: (context, downloading, _) {
+                          return downloading
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: LinearProgressIndicator(),
+                                )
+                              : const SizedBox.shrink();
+                        },
+                      ),
+                    ]),
+                    _buildSection('配置管理', [
+                      _buildButton(
+                        icon: Icons.settings,
+                        label: '生成默认节点',
+                        onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.restore,
+                        label: '重置所有配置',
+                        style: _menuButtonStyle.copyWith(
+                          backgroundColor: WidgetStateProperty.all(Colors.red[400]),
+                        ),
+                        onPressed: isUnlocked ? _onResetAll : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.sync,
+                        label: '同步配置',
+                        onPressed: isUnlocked ? _onSyncConfig : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.delete_forever,
+                        label: '删除配置',
+                        onPressed: isUnlocked ? _onDeleteConfig : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.save,
+                        label: '保存配置',
+                        onPressed: isUnlocked ? _onSaveConfig : null,
+                      ),
+                    ]),
+                    if (!isUnlocked)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          '请先解锁以执行初始化操作',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const Divider(height: 32),
+            SwitchListTile(
+              secondary: const Icon(Icons.bolt),
+              title: const Text('升级 DailyBuild', style: _menuTextStyle),
+              value: GlobalState.useDailyBuild.value,
+              onChanged: (v) {
+                setState(() => GlobalState.useDailyBuild.value = v);
+                logConsoleKey.currentState?.addLog('升级 DailyBuild: ${v ? "开启" : "关闭"}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.stacked_line_chart),
+              title: const Text('查看收集内容', style: _menuTextStyle),
+              trailing: Switch(
+                value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
-                  setState(() => GlobalState.useDailyBuild.value = v);
-                  logConsoleKey.currentState?.addLog('升级 DailyBuild: ${v ? "开启" : "关闭"}');
+                  setState(() => GlobalState.telemetryEnabled.value = v);
+                  logConsoleKey.currentState?.addLog('Telemetry: ${v ? "开启" : "关闭"}');
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.stacked_line_chart),
-                title: const Text('查看收集内容', style: _menuTextStyle),
-                trailing: Switch(
-                  value: GlobalState.telemetryEnabled.value,
-                  onChanged: (v) {
-                    setState(() => GlobalState.telemetryEnabled.value = v);
-                    logConsoleKey.currentState?.addLog('Telemetry: ${v ? "开启" : "关闭"}');
-                  },
-                ),
-                onTap: _showTelemetryData,
-              ),
-              ListTile(
-                leading: const Icon(Icons.system_update),
-                title: const Text('检查更新', style: _menuTextStyle),
-                onTap: _onCheckUpdate,
-              ),
-            ],
-          ),
+              onTap: _showTelemetryData,
+            ),
+            ListTile(
+              leading: const Icon(Icons.system_update),
+              title: const Text('检查更新', style: _menuTextStyle),
+              onTap: _onCheckUpdate,
+            ),
+          ],
         ),
-        const VerticalDivider(width: 1),
-        const Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: Text('请选择左侧菜单')),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
