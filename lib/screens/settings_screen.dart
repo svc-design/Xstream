@@ -25,6 +25,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
     textStyle: _menuTextStyle,
   );
 
+  Widget _buildButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+    ButtonStyle? style,
+  }) {
+    return SizedBox(
+      width: 160,
+      child: ElevatedButton.icon(
+        style: style ?? _menuButtonStyle,
+        icon: Icon(icon),
+        label: Text(label, style: _menuTextStyle),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, List<Widget> children) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: children),
+        ],
+      ),
+    );
+  }
+
   String _currentVersion() {
     final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(buildVersion);
     return match?.group(1) ?? '0.0.0';
@@ -190,88 +224,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.build),
-                            label: const Text('初始化 Xray', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onInitXray : null,
+                        _buildSection('Xray 管理', [
+                          _buildButton(
+                              icon: Icons.build,
+                              label: '初始化 Xray',
+                              onPressed: isUnlocked ? _onInitXray : null),
+                          _buildButton(
+                              icon: Icons.update,
+                              label: '更新 Xray Core',
+                              onPressed: isUnlocked ? _onUpdateXray : null),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: GlobalState.xrayUpdating,
+                            builder: (context, downloading, _) {
+                              return downloading
+                                  ? const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 4),
+                                      child: LinearProgressIndicator(),
+                                    )
+                                  : const SizedBox.shrink();
+                            },
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.update),
-                            label: const Text('更新 Xray Core', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onUpdateXray : null,
-                          ),
-                        ),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: GlobalState.xrayUpdating,
-                          builder: (context, downloading, _) {
-                            return downloading
-                                ? const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 4),
-                                    child: LinearProgressIndicator(),
-                                  )
-                                : const SizedBox.shrink();
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.settings),
-                            label: const Text('生成默认节点', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle.copyWith(
-                              backgroundColor: WidgetStateProperty.all(Colors.red[400]),
-                            ),
-                            icon: const Icon(Icons.restore),
-                            label: const Text('重置所有配置', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onResetAll : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.sync),
-                            label: const Text('同步配置', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onSyncConfig : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.delete_forever),
-                            label: const Text('删除配置', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onDeleteConfig : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: _menuButtonStyle,
-                            icon: const Icon(Icons.save),
-                            label: const Text('保存配置', style: _menuTextStyle),
-                            onPressed: isUnlocked ? _onSaveConfig : null,
-                          ),
-                        ),
+                        ]),
+                        _buildSection('配置管理', [
+                          _buildButton(
+                              icon: Icons.settings,
+                              label: '生成默认节点',
+                              onPressed:
+                                  isUnlocked ? _onGenerateDefaultNodes : null),
+                          _buildButton(
+                              icon: Icons.restore,
+                              label: '重置所有配置',
+                              style: _menuButtonStyle.copyWith(
+                                  backgroundColor:
+                                      WidgetStateProperty.all(Colors.red[400])),
+                              onPressed: isUnlocked ? _onResetAll : null),
+                          _buildButton(
+                              icon: Icons.sync,
+                              label: '同步配置',
+                              onPressed: isUnlocked ? _onSyncConfig : null),
+                          _buildButton(
+                              icon: Icons.delete_forever,
+                              label: '删除配置',
+                              onPressed: isUnlocked ? _onDeleteConfig : null),
+                          _buildButton(
+                              icon: Icons.save,
+                              label: '保存配置',
+                              onPressed: isUnlocked ? _onSaveConfig : null),
+                        ]),
                         if (!isUnlocked)
                           const Padding(
                             padding: EdgeInsets.only(top: 8.0),
@@ -290,14 +289,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 secondary: const Icon(Icons.bolt),
                 title: const Text('升级 DailyBuild', style: _menuTextStyle),
                 value: GlobalState.useDailyBuild.value,
-                onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
+                onChanged: (v) {
+                  setState(() => GlobalState.useDailyBuild.value = v);
+                  logConsoleKey.currentState?.addLog('升级 DailyBuild: ${v ? "开启" : "关闭"}');
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.stacked_line_chart),
                 title: const Text('查看收集内容', style: _menuTextStyle),
                 trailing: Switch(
                   value: GlobalState.telemetryEnabled.value,
-                  onChanged: (v) => setState(() => GlobalState.telemetryEnabled.value = v),
+                  onChanged: (v) {
+                    setState(() => GlobalState.telemetryEnabled.value = v);
+                    logConsoleKey.currentState?.addLog('Telemetry: ${v ? "开启" : "关闭"}');
+                  },
                 ),
                 onTap: _showTelemetryData,
               ),
@@ -306,27 +311,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: const Text('检查更新', style: _menuTextStyle),
                 onTap: _onCheckUpdate,
               ),
-              ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('关于', style: _menuTextStyle),
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'XStream',
-                    applicationVersion: buildVersion,
-                    applicationLegalese: '''
-© 2025 svc.plus
-
-XStream is licensed under the GNU General Public License v3.0.
-
-This application includes components from:
-• Xray-core v25.3.6 – https://github.com/XTLS/Xray-core
-  Licensed under the Mozilla Public License 2.0
-''',
-                  );
-                },
-              ),
-            ],
           ),
         ),
         const VerticalDivider(width: 1),
