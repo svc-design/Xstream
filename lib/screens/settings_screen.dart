@@ -32,7 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ButtonStyle? style,
   }) {
     return SizedBox(
-      width: 160,
+      width: double.infinity,
       child: ElevatedButton.icon(
         style: style ?? _menuButtonStyle,
         icon: Icon(icon),
