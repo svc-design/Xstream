@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
+import 'screens/config_options_screen.dart';
+import 'screens/logs_screen.dart';
+import 'screens/about_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart' show GlobalState, logConsoleKey;
+import 'utils/global_config.dart' show GlobalState, logConsoleKey, buildVersion;
 import 'services/telemetry/telemetry_service.dart';
-import 'widgets/log_console.dart';
 import 'services/vpn_config_service.dart';
 
 void main(List<String> args) async {
@@ -105,12 +107,72 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     GlobalState.sudoPassword.value = '';
   }
 
+  void _openAddConfig() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+    );
+  }
+
+  void _showModeSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ValueListenableBuilder<String>(
+          valueListenable: GlobalState.connectionMode,
+          builder: (context, mode, _) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Radio<String>(
+                    value: 'VPN',
+                    groupValue: mode,
+                    onChanged: (v) {
+                      if (v != null) GlobalState.connectionMode.value = v;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  title: const Text('VPN'),
+                ),
+                ListTile(
+                  leading: Radio<String>(
+                    value: '仅代理',
+                    groupValue: mode,
+                    onChanged: (v) {
+                      if (v != null) GlobalState.connectionMode.value = v;
+                      Navigator.pop(context);
+                    },
+                  ),
+                  title: const Text('仅代理'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final pages = <Widget>[
+      const HomeScreen(),
+      const SubscriptionScreen(),
+      const ConfigOptionsScreen(),
+      const SettingsScreen(),
+      const LogsScreen(),
+      const AboutScreen(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('XStream'),
+        title: Text('XStream $buildVersion'),
         actions: [
+          IconButton(
+            tooltip: '添加配置文件',
+            icon: const Icon(Icons.add),
+            onPressed: _openAddConfig,
+          ),
           ValueListenableBuilder<bool>(
             valueListenable: GlobalState.isUnlocked,
             builder: (context, unlocked, _) {
@@ -122,22 +184,28 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: const [
-          HomeScreen(),
-          SubscriptionScreen(),
-          SettingsScreen(),
+      body: Row(
+        children: [
+          NavigationRail(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) => setState(() => _currentIndex = index),
+            labelType: NavigationRailLabelType.all,
+            destinations: const [
+              NavigationRailDestination(icon: Icon(Icons.home), label: Text('首页')),
+              NavigationRailDestination(icon: Icon(Icons.link), label: Text('代理')),
+              NavigationRailDestination(icon: Icon(Icons.tune), label: Text('配置选项')),
+              NavigationRailDestination(icon: Icon(Icons.settings), label: Text('设置')),
+              NavigationRailDestination(icon: Icon(Icons.article), label: Text('日志')),
+              NavigationRailDestination(icon: Icon(Icons.info), label: Text('关于')),
+            ],
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(child: IndexedStack(index: _currentIndex, children: pages)),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.link), label: 'Subscriptions'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showModeSelector,
+        child: const Icon(Icons.tune),
       ),
     );
   }
