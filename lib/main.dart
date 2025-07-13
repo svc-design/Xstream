@@ -167,7 +167,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('XStream $buildVersion'),
+        title: const Text(''),
         actions: [
           IconButton(
             tooltip: '添加配置文件',
