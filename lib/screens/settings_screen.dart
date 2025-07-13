@@ -314,13 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
-        const VerticalDivider(width: 1),
-        const Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: Text('请选择左侧菜单')),
-          ),
-        ),
+        // 右侧内容区域已移除
       ],
     );
   }
