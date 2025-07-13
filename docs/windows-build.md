@@ -17,6 +17,15 @@ bash build_scripts/build_windows.sh
 
 执行脚本 `build_scripts/build_windows.sh`，脚本会利用 MinGW 工具链将 `go_core` 编译为 `bindings/libbridge.dll`供 FFI 调用使用，生成的 DLL 会被 Dart 通过 `DynamicLibrary.open` 加载。
 
+如遇 `go build` 相关错误，可在 `go_core` 目录手动执行：
+
+```powershell
+go env CGO_ENABLED   # 应输出 1
+go build -buildmode=c-archive -o libgo_logic.a
+```
+
+成功后会生成 `libgo_logic.a` 与 `libgo_logic.h`，随后再运行 `flutter build windows` 即可。
+
 ## 3. 构建 Flutter 桌面应用
 
 ```

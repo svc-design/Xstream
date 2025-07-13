@@ -94,9 +94,9 @@ do shell script "\(commandJoined.replacingOccurrences(of: "\"", with: "\\\""))" 
 
     let urlString: String
     if arch == "arm64" {
-      urlString = "http://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-arm64-v8a.zip"
+      urlString = "https://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-arm64-v8a.zip"
     } else {
-      urlString = "http://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-64.zip"
+      urlString = "https://artifact.onwalk.net/xray-core/v25.3.6/Xray-macos-64.zip"
     }
 
     guard let url = URL(string: urlString) else {
@@ -159,6 +159,7 @@ do shell script "\(escaped)" with administrator privileges
   func runResetXray(bundleId: String, password: String, result: @escaping FlutterResult) {
   let rawShell = """
 set -e
+launchctl remove com.xstream.xray-node-trial || true
 launchctl remove com.xstream.xray-node-jp || true
 launchctl remove com.xstream.xray-node-ca || true
 launchctl remove com.xstream.xray-node-us || true

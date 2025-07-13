@@ -6,7 +6,7 @@
 
 ```
 ┌──────────────────────────────┐
-│       FoXray iOS App         │
+│       iOS App         │
 │ ┌──────────────────────────┐ │
 │ │ Swift / Flutter 前端界面 │ │
 │ └────────────┬─────────────┘ │
@@ -26,14 +26,14 @@
 
 ## xray-core 集成
 
-1. 在项目根目录运行 `./build_scripts/build_ios_xray.sh`，自动克隆并编译 xray-core 为 `libxray-core.a`。
-2. 将生成的静态库放入 Xcode 的 `Frameworks` 目录并链接。
-3. Swift 侧通过 FFI 调用静态库导出的 C 接口启动或停止代理进程。
+1. 在项目根目录运行 `./build_scripts/build_ios_xray.sh` 生成 `libxray.a` 与 `libxray.h`。脚本会在 `build/ios` 目录输出编译结果，并使用 `GOOS=ios GOARCH=arm64` 进行构建。
+2. 将生成的静态库放入 Xcode 的 `Frameworks` 目录并链接，随后即可通过 `StartXray`/`StopXray` 在原生层控制代理实例。
+3. Flutter 端直接使用 Dart FFI 调用上述接口，无需额外 Swift 桥接代码。
 4. 若需要调试，可在模拟器上使用 `GOARCH=arm64` 构建并运行。
 
 ## 配置能力
 
-- 支持导入 VLESS、VMess、Reality、Trojan 等协议节点。
+- 支持导入 VLESS、Reality 协议节点。
 - Flutter 端根据用户输入生成标准 xray JSON 配置，调用 `writeConfigFiles` 写入沙箱目录。
 - 配置文件示例位于 `~/Library/Application Support/Xstream/`（模拟器路径）下。
 

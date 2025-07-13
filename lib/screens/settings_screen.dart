@@ -7,8 +7,7 @@ import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
 import '../../services/telemetry/telemetry_service.dart';
-import '../widgets/log_console.dart';
-import 'help_screen.dart';
+import '../widgets/log_console.dart' show LogLevel;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,7 +17,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedTab = 'log';
   Timer? _xrayMonitorTimer;
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
@@ -116,6 +114,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _onSyncConfig() async {
+    logConsoleKey.currentState?.addLog('开始同步配置...');
+    try {
+      await VpnConfig.load();
+      logConsoleKey.currentState?.addLog('✅ 已同步配置文件');
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 同步失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onDeleteConfig() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以删除配置', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始删除配置...');
+    try {
+      final nodes = List<VpnNode>.from(VpnConfig.nodes);
+      for (final node in nodes) {
+        await VpnConfig.deleteNodeFiles(node);
+      }
+      await VpnConfig.load();
+      logConsoleKey.currentState?.addLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 删除失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onSaveConfig() async {
+    logConsoleKey.currentState?.addLog('开始保存配置...');
+    try {
+      final path = await VpnConfig.getConfigPath();
+      await VpnConfig.saveToFile();
+      logConsoleKey.currentState?.addLog('✅ 配置已保存到: $path');
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 保存失败: $e', level: LogLevel.error);
+    }
+  }
+
   void _onCheckUpdate() {
     logConsoleKey.currentState?.addLog('开始检查更新...');
     UpdateChecker.manualCheck(
@@ -203,6 +242,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             onPressed: isUnlocked ? _onResetAll : null,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.sync),
+                            label: const Text('同步配置', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onSyncConfig : null,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.delete_forever),
+                            label: const Text('删除配置', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onDeleteConfig : null,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: _menuButtonStyle,
+                            icon: const Icon(Icons.save),
+                            label: const Text('保存配置', style: _menuTextStyle),
+                            onPressed: isUnlocked ? _onSaveConfig : null,
+                          ),
+                        ),
                         if (!isUnlocked)
                           const Padding(
                             padding: EdgeInsets.only(top: 8.0),
@@ -217,49 +286,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(height: 32),
-              ListTile(
-                leading: const Icon(Icons.article),
-                title: const Text('📜 查看日志', style: _menuTextStyle),
-                selected: _selectedTab == 'log',
-                onTap: () {
-                  setState(() {
-                    _selectedTab = 'log';
-                  });
-                },
-              ),
               SwitchListTile(
                 secondary: const Icon(Icons.bolt),
                 title: const Text('升级 DailyBuild', style: _menuTextStyle),
                 value: GlobalState.useDailyBuild.value,
                 onChanged: (v) => setState(() => GlobalState.useDailyBuild.value = v),
               ),
-              SwitchListTile(
-                secondary: const Icon(Icons.stacked_line_chart),
-                title: const Text('匿名统计', style: _menuTextStyle),
-                subtitle: const Text('收集系统版本、运行时间等，可在此关闭'),
-                value: GlobalState.telemetryEnabled.value,
-                onChanged: (v) {
-                  setState(() => GlobalState.telemetryEnabled.value = v);
-                },
-              ),
               ListTile(
-                leading: const Icon(Icons.visibility),
+                leading: const Icon(Icons.stacked_line_chart),
                 title: const Text('查看收集内容', style: _menuTextStyle),
+                trailing: Switch(
+                  value: GlobalState.telemetryEnabled.value,
+                  onChanged: (v) => setState(() => GlobalState.telemetryEnabled.value = v),
+                ),
                 onTap: _showTelemetryData,
               ),
               ListTile(
                 leading: const Icon(Icons.system_update),
                 title: const Text('检查更新', style: _menuTextStyle),
                 onTap: _onCheckUpdate,
-              ),
-              ListTile(
-                leading: const Icon(Icons.help),
-                title: const Text('帮助', style: _menuTextStyle),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const HelpScreen()),
-                  );
-                },
               ),
               ListTile(
                 leading: const Icon(Icons.info),
@@ -285,12 +330,10 @@ This application includes components from:
           ),
         ),
         const VerticalDivider(width: 1),
-        Expanded(
+        const Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _selectedTab == 'log'
-                ? LogConsole(key: logConsoleKey)
-                : const Center(child: Text('请选择左侧菜单')),
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: Text('请选择左侧菜单')),
           ),
         ),
       ],

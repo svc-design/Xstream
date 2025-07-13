@@ -251,6 +251,16 @@ func ResetXrayAndConfig(passwordC *C.char) *C.char {
 	return C.CString("success")
 }
 
+//export StartXray
+func StartXray(configC *C.char) *C.char {
+	return C.CString("error:not supported")
+}
+
+//export StopXray
+func StopXray() *C.char {
+	return C.CString("error:not supported")
+}
+
 // ---- System tray integration ----
 
 var trayOnce sync.Once
