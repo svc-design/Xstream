@@ -19,6 +19,9 @@ dependencies:
   shared_preferences: ^2.2.2
   json_annotation: ^4.4.0
   flutter_launcher_icons: ^0.14.3  # ✅ 升级：解决唯一一个受限 direct dependency
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
