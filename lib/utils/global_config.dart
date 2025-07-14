@@ -55,6 +55,10 @@ class GlobalState {
   /// 当前连接模式，可在底部弹出栏中切换（如 VPN / 仅代理）
   static final ValueNotifier<String> connectionMode =
       ValueNotifier<String>('VPN');
+
+  /// 当前语言环境，默认中文
+  static final ValueNotifier<Locale> locale =
+      ValueNotifier<Locale>(const Locale('zh'));
 }
 
 /// 用于获取应用相关的配置信息

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'update_service.dart';
 import 'update_platform.dart';
 import '../../utils/global_config.dart';
+import '../../l10n/app_localizations.dart';
 
 class UpdateChecker {
   static const _lastVersionKey = 'lastCheckedVersion';
@@ -63,19 +64,19 @@ class UpdateChecker {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text('发现新版本 ${info.version}'),
+          title: Text('${context.l10n.get('checkUpdate')} ${info.version}'),
           content: Text(info.notes),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
+              child: Text(context.l10n.get('cancel')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 launchUrl(Uri.parse(info.url));
               },
-              child: const Text('下载'),
+              child: Text(context.l10n.get('confirm')),
             ),
           ],
         ),
@@ -84,7 +85,7 @@ class UpdateChecker {
       logConsoleKey.currentState?.addLog('[INFO] 没有检测到新版本');
       if (manual) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已是最新版本')),
+          SnackBar(content: Text(context.l10n.get('upToDate'))),
         );
       }
     }
