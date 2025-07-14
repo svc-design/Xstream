@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/log_store.dart';
+import '../l10n/app_localizations.dart';
 
 enum LogLevel { info, warning, error }
 
@@ -54,7 +55,7 @@ class LogConsoleState extends State<LogConsole> {
     final logText = _logs.map((e) => e.formatted).join('\n');
     debugPrint(logText);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('📤 日志已导出至控制台')),
+      SnackBar(content: Text(context.l10n.get('logExported'))),
     );
   }
 
@@ -67,12 +68,12 @@ class LogConsoleState extends State<LogConsole> {
           children: [
             ElevatedButton(
               onPressed: clearLogs,
-              child: const Text("🧹 清空日志"),
+              child: Text(context.l10n.get('clearLogs')),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: exportLogs,
-              child: const Text("📤 导出日志"),
+              child: Text(context.l10n.get('exportLogs')),
             ),
           ],
         ),
