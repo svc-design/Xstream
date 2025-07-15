@@ -172,21 +172,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Text('${context.l10n.get('language')}: '),
-                DropdownButton<Locale>(
-                  value: GlobalState.locale.value,
-                  onChanged: (loc) {
-                    if (loc != null) GlobalState.locale.value = loc;
-                  },
-                  items: const [
-                    DropdownMenuItem(value: Locale('zh'), child: Text('中文')),
-                    DropdownMenuItem(value: Locale('en'), child: Text('English')),
-                  ],
-                ),
-              ],
-            ),
             const SizedBox(height: 16),
             ValueListenableBuilder<bool>(
               valueListenable: GlobalState.isUnlocked,

@@ -28,7 +28,7 @@ class _LockButtonState extends State<LockButton> {
             obscureText: true,
             decoration: InputDecoration(
               labelText: context.l10n.get('password'),
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
           ),
           actions: [
