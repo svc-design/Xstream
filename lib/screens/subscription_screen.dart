@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
 import '../../widgets/log_console.dart';
 import '../../services/vpn_config_service.dart';
+import '../l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -84,7 +85,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('添加加速节点配置'),
+        title: Text(context.l10n.get('addNodeConfig')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,28 +94,28 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           children: [
             TextField(
               controller: _nodeNameController,
-              decoration: const InputDecoration(labelText: '节点名（如 US-Node）'),
+              decoration: InputDecoration(labelText: context.l10n.get('nodeName')),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _domainController,
-              decoration: const InputDecoration(labelText: '服务器域名'),
+              decoration: InputDecoration(labelText: context.l10n.get('serverDomain')),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _portController,
-              decoration: const InputDecoration(labelText: '端口号'),
+              decoration: InputDecoration(labelText: context.l10n.get('port')),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _uuidController,
-              decoration: const InputDecoration(labelText: 'UUID'),
+              decoration: InputDecoration(labelText: context.l10n.get('uuid')),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _onCreateConfig,
-              child: const Text('生成配置并保存'),
+              child: Text(context.l10n.get('generateSave')),
             ),
             const SizedBox(height: 16),
             Text(_message, style: const TextStyle(color: Colors.red)),
