@@ -149,47 +149,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onSyncConfig() async {
-    logConsoleKey.currentState?.addLog('开始同步配置...');
-    try {
-      await VpnConfig.load();
-      logConsoleKey.currentState?.addLog('✅ 已同步配置文件');
-    } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 同步失败: $e', level: LogLevel.error);
-    }
-  }
-
-  void _onDeleteConfig() async {
-    final isUnlocked = GlobalState.isUnlocked.value;
-    if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以删除配置', level: LogLevel.warning);
-      return;
-    }
-
-    logConsoleKey.currentState?.addLog('开始删除配置...');
-    try {
-      final nodes = List<VpnNode>.from(VpnConfig.nodes);
-      for (final node in nodes) {
-        await VpnConfig.deleteNodeFiles(node);
-      }
-      await VpnConfig.load();
-      logConsoleKey.currentState?.addLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
-    } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 删除失败: $e', level: LogLevel.error);
-    }
-  }
-
-  void _onSaveConfig() async {
-    logConsoleKey.currentState?.addLog('开始保存配置...');
-    try {
-      final path = await VpnConfig.getConfigPath();
-      await VpnConfig.saveToFile();
-      logConsoleKey.currentState?.addLog('✅ 配置已保存到: $path');
-    } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 保存失败: $e', level: LogLevel.error);
-    }
-  }
-
   void _onCheckUpdate() {
     logConsoleKey.currentState?.addLog('开始检查更新...');
     UpdateChecker.manualCheck(
@@ -271,21 +230,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           backgroundColor: WidgetStateProperty.all(Colors.red[400]),
                         ),
                         onPressed: isUnlocked ? _onResetAll : null,
-                      ),
-                      _buildButton(
-                        icon: Icons.sync,
-                        label: context.l10n.get('syncConfig'),
-                        onPressed: isUnlocked ? _onSyncConfig : null,
-                      ),
-                      _buildButton(
-                        icon: Icons.delete_forever,
-                        label: context.l10n.get('deleteConfig'),
-                        onPressed: isUnlocked ? _onDeleteConfig : null,
-                      ),
-                      _buildButton(
-                        icon: Icons.save,
-                        label: context.l10n.get('saveConfig'),
-                        onPressed: isUnlocked ? _onSaveConfig : null,
                       ),
                     ]),
                     if (!isUnlocked)
