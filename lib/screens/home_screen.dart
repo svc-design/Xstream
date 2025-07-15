@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
-import '../../utils/global_config.dart';
+import '../../utils/global_config.dart' show GlobalState, logConsoleKey;
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
+import '../widgets/log_console.dart' show LogLevel;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,6 +74,57 @@ class _HomeScreenState extends State<HomeScreen> {
 
   }
 
+  void _onSyncConfig() async {
+    logConsoleKey.currentState?.addLog('开始同步配置...');
+    try {
+      await VpnConfig.load();
+      logConsoleKey.currentState?.addLog('✅ 已同步配置文件');
+      if (!mounted) return;
+      setState(() {
+        vpnNodes = VpnConfig.nodes;
+      });
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 同步失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onDeleteConfig() async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    if (!isUnlocked) {
+      logConsoleKey.currentState?.addLog('请先解锁以删除配置', level: LogLevel.warning);
+      return;
+    }
+
+    logConsoleKey.currentState?.addLog('开始删除配置...');
+    try {
+      final nodes = List<VpnNode>.from(VpnConfig.nodes);
+      for (final node in nodes) {
+        await VpnConfig.deleteNodeFiles(node);
+      }
+      await VpnConfig.load();
+      logConsoleKey.currentState?.addLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
+      if (!mounted) return;
+      setState(() {
+        vpnNodes = VpnConfig.nodes;
+        _selectedNodeNames.clear();
+        _activeNode = '';
+      });
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 删除失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void _onSaveConfig() async {
+    logConsoleKey.currentState?.addLog('开始保存配置...');
+    try {
+      final path = await VpnConfig.getConfigPath();
+      await VpnConfig.saveToFile();
+      logConsoleKey.currentState?.addLog('✅ 配置已保存到: $path');
+    } catch (e) {
+      logConsoleKey.currentState?.addLog('[错误] 保存失败: $e', level: LogLevel.error);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +167,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               );
 
-        return content;
+        return Stack(
+          children: [
+            content,
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton.small(
+                    heroTag: "sync",
+                    onPressed: isUnlocked ? _onSyncConfig : null,
+                    tooltip: context.l10n.get('syncConfig'),
+                    child: const Icon(Icons.sync),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton.small(
+                    heroTag: "save",
+                    onPressed: _onSaveConfig,
+                    tooltip: context.l10n.get('saveConfig'),
+                    child: const Icon(Icons.save),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton.small(
+                    heroTag: "delete",
+                    onPressed: isUnlocked ? _onDeleteConfig : null,
+                    tooltip: context.l10n.get('deleteConfig'),
+                    backgroundColor: Colors.red[400],
+                    child: const Icon(Icons.delete_forever),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
       },
     );
   }
