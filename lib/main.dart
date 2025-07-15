@@ -129,6 +129,38 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
+  void _showLanguageSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final current = GlobalState.locale.value;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<Locale>(
+              value: const Locale('zh'),
+              groupValue: current,
+              title: const Text('中文'),
+              onChanged: (loc) {
+                if (loc != null) GlobalState.locale.value = loc;
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<Locale>(
+              value: const Locale('en'),
+              groupValue: current,
+              title: const Text('English'),
+              onChanged: (loc) {
+                if (loc != null) GlobalState.locale.value = loc;
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showModeSelector() {
     showModalBottomSheet(
       context: context,
@@ -184,6 +216,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text(''),
         actions: [
+          IconButton(
+            tooltip: context.l10n.get('language'),
+            icon: const Icon(Icons.language),
+            onPressed: _showLanguageSelector,
+          ),
           IconButton(
             tooltip: context.l10n.get('addConfig'),
             icon: const Icon(Icons.add),
