@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/global_config.dart';
+import '../l10n/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -8,7 +9,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('关于'),
+        title: Text(context.l10n.get('about')),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

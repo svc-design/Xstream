@@ -6,6 +6,8 @@ import 'screens/subscription_screen.dart';
 import 'screens/logs_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/about_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/log_store.dart';
 import 'utils/native_bridge.dart';
@@ -33,11 +35,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'XStream',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      home: const MainPage(),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: GlobalState.locale,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          locale: locale,
+          supportedLocales: const [Locale('en'), Locale('zh')],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          title: 'XStream',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: const MainPage(),
+        );
+      },
     );
   }
 }
@@ -83,15 +98,15 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: const Text('输入密码解锁'),
+          title: Text(context.l10n.get('unlockPrompt')),
           content: TextField(
             controller: controller,
             obscureText: true,
-            decoration: const InputDecoration(labelText: '密码'),
+            decoration: InputDecoration(labelText: context.l10n.get('password')),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-            TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('确认')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.get('cancel'))),
+            TextButton(onPressed: () => Navigator.pop(context, controller.text), child: Text(context.l10n.get('confirm'))),
           ],
         );
       },
@@ -133,7 +148,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                       Navigator.pop(context);
                     },
                   ),
-                  title: const Text('VPN'),
+                  title: Text(context.l10n.get('vpn')),
                 ),
                 ListTile(
                   leading: Radio<String>(
@@ -144,7 +159,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                       Navigator.pop(context);
                     },
                   ),
-                  title: const Text('仅代理'),
+                  title: Text(context.l10n.get('proxyOnly')),
                 ),
               ],
             );
@@ -170,7 +185,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         title: const Text(''),
         actions: [
           IconButton(
-            tooltip: '添加配置文件',
+            tooltip: context.l10n.get('addConfig'),
             icon: const Icon(Icons.add),
             onPressed: _openAddConfig,
           ),
@@ -191,13 +206,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) => setState(() => _currentIndex = index),
             labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(icon: Icon(Icons.home), label: Text('首页')),
-              NavigationRailDestination(icon: Icon(Icons.link), label: Text('代理')),
-              NavigationRailDestination(icon: Icon(Icons.settings), label: Text('设置')),
-              NavigationRailDestination(icon: Icon(Icons.article), label: Text('日志')),
-              NavigationRailDestination(icon: Icon(Icons.help), label: Text('帮助')),
-              NavigationRailDestination(icon: Icon(Icons.info), label: Text('关于')),
+            destinations: [
+              NavigationRailDestination(icon: const Icon(Icons.home), label: Text(context.l10n.get('home'))),
+              NavigationRailDestination(icon: const Icon(Icons.link), label: Text(context.l10n.get('proxy'))),
+              NavigationRailDestination(icon: const Icon(Icons.settings), label: Text(context.l10n.get('settings'))),
+              NavigationRailDestination(icon: const Icon(Icons.article), label: Text(context.l10n.get('logs'))),
+              NavigationRailDestination(icon: const Icon(Icons.help), label: Text(context.l10n.get('help'))),
+              NavigationRailDestination(icon: const Icon(Icons.info), label: Text(context.l10n.get('about'))),
             ],
           ),
           const VerticalDivider(width: 1),

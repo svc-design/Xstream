@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
 import '../../utils/global_config.dart';
+import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       if (isRunning) {
         setState(() => _activeNode = nodeName);
-        _showMessage('⚠️ 服务已在运行');
+        _showMessage(context.l10n.get('serviceRunning'));
         return;
       }
 
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       valueListenable: GlobalState.isUnlocked,
       builder: (context, isUnlocked, _) {
         final content = vpnNodes.isEmpty
-            ? const Center(child: Text('暂无加速节点，请先添加。'))
+            ? Center(child: Text(context.l10n.get('noNodes')))
             : ListView.builder(
                 itemCount: vpnNodes.length,
                 itemBuilder: (context, index) {

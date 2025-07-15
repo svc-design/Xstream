@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart' show GlobalState, buildVersion, logConsoleKey;
 import '../../utils/native_bridge.dart';
+import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
@@ -207,9 +208,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '⚙️ 设置中心',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.get('settingsCenter'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text('${context.l10n.get('language')}: '),
+                DropdownButton<Locale>(
+                  value: GlobalState.locale.value,
+                  onChanged: (loc) {
+                    if (loc != null) GlobalState.locale.value = loc;
+                  },
+                  items: const [
+                    DropdownMenuItem(value: Locale('zh'), child: Text('中文')),
+                    DropdownMenuItem(value: Locale('en'), child: Text('English')),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             ValueListenableBuilder<bool>(
@@ -218,15 +235,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSection('Xray 管理', [
+                    _buildSection(context.l10n.get('xrayMgmt'), [
                       _buildButton(
                         icon: Icons.build,
-                        label: '初始化 Xray',
+                        label: context.l10n.get('initXray'),
                         onPressed: isUnlocked ? _onInitXray : null,
                       ),
                       _buildButton(
                         icon: Icons.update,
-                        label: '更新 Xray Core',
+                        label: context.l10n.get('updateXray'),
                         onPressed: isUnlocked ? _onUpdateXray : null,
                       ),
                       ValueListenableBuilder<bool>(
@@ -241,15 +258,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                     ]),
-                    _buildSection('配置管理', [
+                    _buildSection(context.l10n.get('configMgmt'), [
                       _buildButton(
                         icon: Icons.settings,
-                        label: '生成默认节点',
+                        label: context.l10n.get('genDefaultNodes'),
                         onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
                       ),
                       _buildButton(
                         icon: Icons.restore,
-                        label: '重置所有配置',
+                        label: context.l10n.get('resetAll'),
                         style: _menuButtonStyle.copyWith(
                           backgroundColor: WidgetStateProperty.all(Colors.red[400]),
                         ),
@@ -257,26 +274,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       _buildButton(
                         icon: Icons.sync,
-                        label: '同步配置',
+                        label: context.l10n.get('syncConfig'),
                         onPressed: isUnlocked ? _onSyncConfig : null,
                       ),
                       _buildButton(
                         icon: Icons.delete_forever,
-                        label: '删除配置',
+                        label: context.l10n.get('deleteConfig'),
                         onPressed: isUnlocked ? _onDeleteConfig : null,
                       ),
                       _buildButton(
                         icon: Icons.save,
-                        label: '保存配置',
+                        label: context.l10n.get('saveConfig'),
                         onPressed: isUnlocked ? _onSaveConfig : null,
                       ),
                     ]),
                     if (!isUnlocked)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                          '请先解锁以执行初始化操作',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          context.l10n.get('unlockFirst'),
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ),
                   ],
@@ -286,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(height: 32),
             SwitchListTile(
               secondary: const Icon(Icons.bolt),
-              title: const Text('升级 DailyBuild', style: _menuTextStyle),
+              title: Text(context.l10n.get('upgradeDaily'), style: _menuTextStyle),
               value: GlobalState.useDailyBuild.value,
               onChanged: (v) {
                 setState(() => GlobalState.useDailyBuild.value = v);
@@ -295,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.stacked_line_chart),
-              title: const Text('查看收集内容', style: _menuTextStyle),
+              title: Text(context.l10n.get('viewCollected'), style: _menuTextStyle),
               trailing: Switch(
                 value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
@@ -307,7 +324,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.system_update),
-              title: const Text('检查更新', style: _menuTextStyle),
+              title: Text(context.l10n.get('checkUpdate'), style: _menuTextStyle),
               onTap: _onCheckUpdate,
             ),
           ],
@@ -328,14 +345,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('收集内容'),
+        title: Text(context.l10n.get('collectedData')),
         content: SingleChildScrollView(
           child: SelectableText(json),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.get('close')),
           ),
         ],
       ),
