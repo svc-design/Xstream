@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import '../../utils/native_bridge.dart';
-import '../../utils/global_config.dart' show GlobalState, logConsoleKey;
+import '../../utils/global_config.dart' show GlobalState;
+import '../../utils/app_logger.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 import '../widgets/log_console.dart' show LogLevel;
@@ -75,34 +76,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onSyncConfig() async {
-    logConsoleKey.currentState?.addLog('开始同步配置...');
+    addAppLog('开始同步配置...');
     try {
       await VpnConfig.load();
-      logConsoleKey.currentState?.addLog('✅ 已同步配置文件');
+      addAppLog('✅ 已同步配置文件');
       if (!mounted) return;
       setState(() {
         vpnNodes = VpnConfig.nodes;
       });
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 同步失败: $e', level: LogLevel.error);
+      addAppLog('[错误] 同步失败: $e', level: LogLevel.error);
     }
   }
 
   void _onDeleteConfig() async {
     final isUnlocked = GlobalState.isUnlocked.value;
     if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以删除配置', level: LogLevel.warning);
+      addAppLog('请先解锁以删除配置', level: LogLevel.warning);
       return;
     }
 
-    logConsoleKey.currentState?.addLog('开始删除配置...');
+    addAppLog('开始删除配置...');
     try {
       final nodes = List<VpnNode>.from(VpnConfig.nodes);
       for (final node in nodes) {
         await VpnConfig.deleteNodeFiles(node);
       }
       await VpnConfig.load();
-      logConsoleKey.currentState?.addLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
+      addAppLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
       if (!mounted) return;
       setState(() {
         vpnNodes = VpnConfig.nodes;
@@ -110,18 +111,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _activeNode = '';
       });
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 删除失败: $e', level: LogLevel.error);
+      addAppLog('[错误] 删除失败: $e', level: LogLevel.error);
     }
   }
 
   void _onSaveConfig() async {
-    logConsoleKey.currentState?.addLog('开始保存配置...');
+    addAppLog('开始保存配置...');
     try {
       final path = await VpnConfig.getConfigPath();
       await VpnConfig.saveToFile();
-      logConsoleKey.currentState?.addLog('✅ 配置已保存到: $path');
+      addAppLog('✅ 配置已保存到: $path');
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 保存失败: $e', level: LogLevel.error);
+      addAppLog('[错误] 保存失败: $e', level: LogLevel.error);
     }
   }
 

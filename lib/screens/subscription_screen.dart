@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
 import '../../widgets/log_console.dart';
+import '../../utils/app_logger.dart';
 import '../../services/vpn_config_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -46,7 +47,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       setState(() {
         _message = '⚠️ 请填写所有必填项！';
       });
-      logConsoleKey.currentState?.addLog('缺少必填项或 Bundle ID', level: LogLevel.error); // Log missing fields or bundleId
+      addAppLog('缺少必填项或 Bundle ID', level: LogLevel.error); // Log missing fields or bundleId
       return;
     }
 
@@ -54,7 +55,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       setState(() {
         _message = '🔒 请先点击右上角的解锁按钮。';
       });
-      logConsoleKey.currentState?.addLog('请先解锁后再创建配置', level: LogLevel.warning); // Log warning
+      addAppLog('请先解锁后再创建配置', level: LogLevel.warning); // Log warning
     } else if (password.isNotEmpty) {
       // Call VpnConfigService to generate content
       VpnConfig.generateContent(
@@ -70,14 +71,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           });
         },
         logMessage: (msg) {
-          logConsoleKey.currentState?.addLog(msg);
+          addAppLog(msg);
         },
       );
     } else {
       setState(() {
         _message = '⚠️ 无法获取 sudo 密码。';
       });
-      logConsoleKey.currentState?.addLog('无法获取 sudo 密码', level: LogLevel.error); // Log error
+      addAppLog('无法获取 sudo 密码', level: LogLevel.error); // Log error
     }
   }
 
