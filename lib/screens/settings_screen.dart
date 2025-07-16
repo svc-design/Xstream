@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../utils/global_config.dart' show GlobalState, buildVersion, logConsoleKey;
+import '../../utils/global_config.dart' show GlobalState, buildVersion;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
 import '../../services/update/update_platform.dart';
 import '../../services/telemetry/telemetry_service.dart';
+import '../../utils/app_logger.dart';
 import '../widgets/log_console.dart' show LogLevel;
 
 class SettingsScreen extends StatefulWidget {
@@ -70,15 +71,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final password = GlobalState.sudoPassword.value;
 
     if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以执行生成操作', level: LogLevel.warning);
+      addAppLog('请先解锁以执行生成操作', level: LogLevel.warning);
       return;
     }
 
-    logConsoleKey.currentState?.addLog('开始生成默认节点...');
+    addAppLog('开始生成默认节点...');
     await VpnConfig.generateDefaultNodes(
       password: password,
-      setMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
-      logMessage: (msg) => logConsoleKey.currentState?.addLog(msg),
+      setMessage: (msg) => addAppLog(msg),
+      logMessage: (msg) => addAppLog(msg),
     );
   }
 
@@ -86,16 +87,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isUnlocked = GlobalState.isUnlocked.value;
 
     if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以初始化 Xray', level: LogLevel.warning);
+      addAppLog('请先解锁以初始化 Xray', level: LogLevel.warning);
       return;
     }
 
-    logConsoleKey.currentState?.addLog('开始初始化 Xray...');
+    addAppLog('开始初始化 Xray...');
     try {
       final output = await NativeBridge.initXray();
-      logConsoleKey.currentState?.addLog(output);
+      addAppLog(output);
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
+      addAppLog('[错误] $e', level: LogLevel.error);
     }
   }
 
@@ -103,20 +104,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isUnlocked = GlobalState.isUnlocked.value;
 
     if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以更新 Xray', level: LogLevel.warning);
+      addAppLog('请先解锁以更新 Xray', level: LogLevel.warning);
       return;
     }
 
-    logConsoleKey.currentState?.addLog('开始更新 Xray Core...');
+    addAppLog('开始更新 Xray Core...');
     try {
       final output = await NativeBridge.updateXrayCore();
-      logConsoleKey.currentState?.addLog(output);
+      addAppLog(output);
       if (output.startsWith('info:')) {
         GlobalState.xrayUpdating.value = true;
         _startMonitorXrayProgress();
       }
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] $e', level: LogLevel.error);
+      addAppLog('[错误] $e', level: LogLevel.error);
     }
   }
 
@@ -136,21 +137,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final password = GlobalState.sudoPassword.value;
 
     if (!isUnlocked) {
-      logConsoleKey.currentState?.addLog('请先解锁以执行重置操作', level: LogLevel.warning);
+      addAppLog('请先解锁以执行重置操作', level: LogLevel.warning);
       return;
     }
 
-    logConsoleKey.currentState?.addLog('开始重置配置与文件...');
+    addAppLog('开始重置配置与文件...');
     try {
       final result = await NativeBridge.resetXrayAndConfig(password);
-      logConsoleKey.currentState?.addLog(result);
+      addAppLog(result);
     } catch (e) {
-      logConsoleKey.currentState?.addLog('[错误] 重置失败: $e', level: LogLevel.error);
+      addAppLog('[错误] 重置失败: $e', level: LogLevel.error);
     }
   }
 
   void _onCheckUpdate() {
-    logConsoleKey.currentState?.addLog('开始检查更新...');
+    addAppLog('开始检查更新...');
     UpdateChecker.manualCheck(
       context,
       currentVersion: _currentVersion(),
@@ -236,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: GlobalState.useDailyBuild.value,
               onChanged: (v) {
                 setState(() => GlobalState.useDailyBuild.value = v);
-                logConsoleKey.currentState?.addLog('升级 DailyBuild: ${v ? "开启" : "关闭"}');
+                addAppLog('升级 DailyBuild: ${v ? "开启" : "关闭"}');
               },
             ),
             ListTile(
@@ -246,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
                   setState(() => GlobalState.telemetryEnabled.value = v);
-                  logConsoleKey.currentState?.addLog('Telemetry: ${v ? "开启" : "关闭"}');
+                  addAppLog('Telemetry: ${v ? "开启" : "关闭"}');
                 },
               ),
               onTap: _showTelemetryData,

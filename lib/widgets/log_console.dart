@@ -36,6 +36,12 @@ class LogConsole extends StatefulWidget {
 class LogConsoleState extends State<LogConsole> {
   final List<LogEntry> _logs = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _logs.addAll(LogStore.getAll());
+  }
+
   void addLog(String message, {LogLevel level = LogLevel.info}) {
     final entry = LogEntry(level, message);
     setState(() {
