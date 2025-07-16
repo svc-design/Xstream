@@ -224,7 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
             content,
             Positioned(
               bottom: 16,
-              right: 16,
+              // Leave space for the main FloatingActionButton
+              right: 88,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
