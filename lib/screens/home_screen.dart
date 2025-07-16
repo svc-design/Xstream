@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   }
 
-  void _onSyncConfig() async {
+  Future<void> onSyncConfig() async {
     addAppLog('开始同步配置...');
     try {
       await VpnConfig.load();
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onDeleteConfig() async {
+  Future<void> onDeleteConfig() async {
     final isUnlocked = GlobalState.isUnlocked.value;
     if (!isUnlocked) {
       addAppLog('请先解锁以删除配置', level: LogLevel.warning);
@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onSaveConfig() async {
+  Future<void> onSaveConfig() async {
     addAppLog('开始保存配置...');
     try {
       final path = await VpnConfig.getConfigPath();
@@ -123,6 +123,57 @@ class _HomeScreenState extends State<HomeScreen> {
       addAppLog('✅ 配置已保存到: $path');
     } catch (e) {
       addAppLog('[错误] 保存失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> onImportConfig() async {
+    final controller = TextEditingController();
+    final jsonStr = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.get('importConfig')),
+          content: TextField(
+            controller: controller,
+            maxLines: 5,
+            decoration: const InputDecoration(hintText: '{"nodes": [...] }'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.get('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text(context.l10n.get('confirm')),
+            ),
+          ],
+        );
+      },
+    );
+    if (jsonStr == null || jsonStr.trim().isEmpty) return;
+    addAppLog('开始导入配置...');
+    try {
+      await VpnConfig.importFromJson(jsonStr);
+      addAppLog('✅ 已导入配置');
+      if (!mounted) return;
+      setState(() {
+        vpnNodes = VpnConfig.nodes;
+      });
+    } catch (e) {
+      addAppLog('[错误] 导入失败: $e', level: LogLevel.error);
+    }
+  }
+
+  void onExportConfig() {
+    addAppLog('开始导出配置...');
+    try {
+      final jsonStr = VpnConfig.exportToJson();
+      debugPrint(jsonStr);
+      _showMessage(context.l10n.get('logExported'));
+      addAppLog('✅ 配置已导出到控制台');
+    } catch (e) {
+      addAppLog('[错误] 导出失败: $e', level: LogLevel.error);
     }
   }
 
@@ -174,29 +225,43 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned(
               bottom: 16,
               right: 16,
-              child: Column(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FloatingActionButton.small(
                     heroTag: "sync",
-                    onPressed: isUnlocked ? _onSyncConfig : null,
+                    onPressed: isUnlocked ? onSyncConfig : null,
                     tooltip: context.l10n.get('syncConfig'),
                     child: const Icon(Icons.sync),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 8),
                   FloatingActionButton.small(
-                    heroTag: "save",
-                    onPressed: _onSaveConfig,
-                    tooltip: context.l10n.get('saveConfig'),
-                    child: const Icon(Icons.save),
+                    heroTag: "import",
+                    onPressed: onImportConfig,
+                    tooltip: context.l10n.get('importConfig'),
+                    child: const Icon(Icons.upload_file),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 8),
+                  FloatingActionButton.small(
+                    heroTag: "export",
+                    onPressed: onExportConfig,
+                    tooltip: context.l10n.get('exportConfig'),
+                    child: const Icon(Icons.download),
+                  ),
+                  const SizedBox(width: 8),
                   FloatingActionButton.small(
                     heroTag: "delete",
-                    onPressed: isUnlocked ? _onDeleteConfig : null,
+                    onPressed: isUnlocked ? onDeleteConfig : null,
                     tooltip: context.l10n.get('deleteConfig'),
                     backgroundColor: Colors.red[400],
                     child: const Icon(Icons.delete_forever),
+                  ),
+                  const SizedBox(width: 8),
+                  FloatingActionButton.small(
+                    heroTag: "save",
+                    onPressed: onSaveConfig,
+                    tooltip: context.l10n.get('saveConfig'),
+                    child: const Icon(Icons.save),
                   ),
                 ],
               ),
