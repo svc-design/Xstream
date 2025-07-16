@@ -1,8 +1,13 @@
 // lib/screens/home_screen.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:archive/archive_io.dart';
+
 import '../../utils/native_bridge.dart';
-import '../../utils/global_config.dart' show GlobalState;
+import '../../utils/global_config.dart'
+    show GlobalState, GlobalApplicationConfig;
 import '../../utils/app_logger.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -96,19 +101,29 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    final names = _selectedNodeNames.toList();
+    if (names.isEmpty) {
+      addAppLog('未选择要删除的节点', level: LogLevel.warning);
+      return;
+    }
+
     addAppLog('开始删除配置...');
     try {
-      final nodes = List<VpnNode>.from(VpnConfig.nodes);
-      for (final node in nodes) {
+      int count = 0;
+      for (final name in names) {
+        final node = vpnNodes.firstWhere((n) => n.name == name);
         await VpnConfig.deleteNodeFiles(node);
+        count++;
       }
       await VpnConfig.load();
-      addAppLog('✅ 已删除 ${nodes.length} 个节点并更新配置');
+      addAppLog('✅ 已删除 $count 个节点并更新配置');
       if (!mounted) return;
       setState(() {
         vpnNodes = VpnConfig.nodes;
+        if (names.contains(_activeNode)) {
+          _activeNode = '';
+        }
         _selectedNodeNames.clear();
-        _activeNode = '';
       });
     } catch (e) {
       addAppLog('[错误] 删除失败: $e', level: LogLevel.error);
@@ -128,15 +143,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> onImportConfig() async {
     final controller = TextEditingController();
-    final jsonStr = await showDialog<String>(
+    final path = await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(context.l10n.get('importConfig')),
           content: TextField(
             controller: controller,
-            maxLines: 5,
-            decoration: const InputDecoration(hintText: '{"nodes": [...] }'),
+            decoration: const InputDecoration(hintText: '/path/to/backup.zip'),
           ),
           actions: [
             TextButton(
@@ -151,27 +165,74 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-    if (jsonStr == null || jsonStr.trim().isEmpty) return;
+    if (path == null || path.trim().isEmpty) return;
     addAppLog('开始导入配置...');
     try {
-      await VpnConfig.importFromJson(jsonStr);
-      addAppLog('✅ 已导入配置');
+      final file = File(path.trim());
+      if (!await file.exists()) {
+        addAppLog('备份文件不存在', level: LogLevel.error);
+        return;
+      }
+      final bytes = await file.readAsBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+      for (final entry in archive) {
+        final name = entry.name;
+        String dest;
+        if (name == 'vpn_nodes.json') {
+          dest = await VpnConfig.getConfigPath();
+        } else if (name.endsWith('.json')) {
+          dest = '${GlobalApplicationConfig.xrayConfigPath}$name';
+        } else if (name.endsWith('.plist') ||
+            name.endsWith('.service') ||
+            name.endsWith('.schtasks')) {
+          dest = GlobalApplicationConfig.servicePath(name);
+        } else {
+          continue;
+        }
+        final out = File(dest);
+        await out.create(recursive: true);
+        await out.writeAsBytes(entry.content as List<int>);
+      }
+      await VpnConfig.load();
       if (!mounted) return;
       setState(() {
         vpnNodes = VpnConfig.nodes;
+        _selectedNodeNames.clear();
+        _activeNode = '';
       });
+      addAppLog('✅ 已导入配置');
     } catch (e) {
       addAppLog('[错误] 导入失败: $e', level: LogLevel.error);
     }
   }
 
-  void onExportConfig() {
+  Future<void> onExportConfig() async {
     addAppLog('开始导出配置...');
     try {
-      final jsonStr = VpnConfig.exportToJson();
-      debugPrint(jsonStr);
-      _showMessage(context.l10n.get('logExported'));
-      addAppLog('✅ 配置已导出到控制台');
+      final configPath = await VpnConfig.getConfigPath();
+      final dir = File(configPath).parent.path;
+      final backupPath =
+          '$dir/vpn_backup_${DateTime.now().millisecondsSinceEpoch}.zip';
+
+      final encoder = ZipFileEncoder();
+      encoder.create(backupPath);
+      encoder.addFile(File(configPath), 'vpn_nodes.json');
+      for (final node in VpnConfig.nodes) {
+        final cfg = File(node.configPath);
+        if (await cfg.exists()) {
+          encoder.addFile(cfg, cfg.uri.pathSegments.last);
+        }
+        final servicePath =
+            GlobalApplicationConfig.servicePath(node.serviceName);
+        final svc = File(servicePath);
+        if (await svc.exists()) {
+          encoder.addFile(svc, svc.uri.pathSegments.last);
+        }
+      }
+      encoder.close();
+
+      addAppLog('✅ 配置已导出: $backupPath');
+      _showMessage('已导出到: $backupPath');
     } catch (e) {
       addAppLog('[错误] 导出失败: $e', level: LogLevel.error);
     }
@@ -259,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   FloatingActionButton.small(
-                    heroTag: "save",
+                    heroTag: "apply",
                     onPressed: onSaveConfig,
                     tooltip: context.l10n.get('saveConfig'),
                     child: const Icon(Icons.save),
