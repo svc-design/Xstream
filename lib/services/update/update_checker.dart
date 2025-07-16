@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'update_service.dart';
 import 'update_platform.dart';
-import '../../utils/global_config.dart';
 import '../../utils/app_logger.dart';
 import '../../l10n/app_localizations.dart';
 
