@@ -53,3 +53,8 @@
 - [Linux 构建须知](docs/linux-build.md)
 - [iOS 设计文档](docs/ios-design.md#xray-core-%E9%9B%86%E6%88%90)
 - [FFI 桥接架构](docs/ffi-bridge-architecture.md)
+
+## 📚 许可证与致谢
+
+- 本项目整体遵循 [GNU GPLv3](LICENSE) 开源协议。
+- VPN/TUN 功能部分引用了 [tun2socks](https://github.com/xjasonlyu/tun2socks) ，该项目基于 MIT License 发布。
