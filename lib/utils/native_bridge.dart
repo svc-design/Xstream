@@ -286,6 +286,36 @@ class NativeBridge {
     }
   }
 
+  /// Start tun2socks-based system proxy on macOS
+  static Future<String> startTun2socks(String password) async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('startTun2socks', {
+        'password': password,
+      });
+      return result ?? '启动成功';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '启动失败: $e';
+    }
+  }
+
+  /// Stop tun2socks-based system proxy on macOS
+  static Future<String> stopTun2socks(String password) async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('stopTun2socks', {
+        'password': password,
+      });
+      return result ?? '已停止';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '停止失败: $e';
+    }
+  }
+
   /// Start embedded xray-core via FFI on iOS
   static String startXray(String configJson) {
     if (!_useFfi) {
