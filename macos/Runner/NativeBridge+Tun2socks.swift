@@ -24,24 +24,22 @@ done
 
 fileprivate let stopTun2socksScript = """
 #!/bin/bash
-
-# 卸载 launchd 服务并清理路由
-set -e
-
-PLIST=\"/Library/LaunchDaemons/com.xstream.tun2socks.plist\"
 TUN_DEV=\"utun123\"
 
-launchctl unload -w \"$PLIST\" 2>/dev/null || true
+echo \"[*] Stopping tun2socks...\"
 
-ifconfig \"$TUN_DEV\" down 2>/dev/null || true
-for net in 1.0.0.0/8 2.0.0.0/7 4.0.0.0/6 8.0.0.0/5 \
-           16.0.0.0/4 32.0.0.0/3 64.0.0.0/2 128.0.0.0/1 \
-           198.18.0.0/15; do
-  route delete -net \"$net\" 2>/dev/null || true
+# 1. 清除路由
+for net in 0.0.0.0/1 128.0.0.0/1 198.18.0.0/15; do
+  sudo route -n delete -net \"$net\" 2>/dev/null || true
 done
-killall tun2socks 2>/dev/null || true
 
-echo \"tun2socks service unloaded\"
+# 2. 停止 tun2socks 进程
+sudo pkill -f \"tun2socks.*$TUN_DEV\" || true
+
+# 3. 删除 TUN 接口（macOS 自动清理 utunX，但最好加这一句）
+sudo ifconfig \"$TUN_DEV\" down 2>/dev/null || true
+
+echo \"[*] tun2socks stopped and routes cleared.\"
 """
 
 

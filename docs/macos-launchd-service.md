@@ -28,28 +28,22 @@ done
 
 ## 停止脚本
 
-对应的 `stop_tun2socks.sh` 用于卸载服务并清理路由：
+对应的 `stop_tun2socks.sh` 用于停止进程并清理路由：
 
 ```bash
 #!/bin/bash
-
-# 卸载 launchd 服务并清理路由
-set -e
-
-PLIST="/Library/LaunchDaemons/com.xstream.tun2socks.plist"
 TUN_DEV="utun123"
 
-launchctl unload -w "$PLIST" 2>/dev/null || true
+echo "[*] Stopping tun2socks..."
 
-ifconfig "$TUN_DEV" down 2>/dev/null || true
-for net in 1.0.0.0/8 2.0.0.0/7 4.0.0.0/6 8.0.0.0/5 \
-           16.0.0.0/4 32.0.0.0/3 64.0.0.0/2 128.0.0.0/1 \
-           198.18.0.0/15; do
-  route delete -net "$net" 2>/dev/null || true
+for net in 0.0.0.0/1 128.0.0.0/1 198.18.0.0/15; do
+  sudo route -n delete -net "$net" 2>/dev/null || true
 done
-killall tun2socks 2>/dev/null || true
 
-echo "tun2socks service unloaded"
+sudo pkill -f "tun2socks.*$TUN_DEV" || true
+sudo ifconfig "$TUN_DEV" down 2>/dev/null || true
+
+echo "[*] tun2socks stopped and routes cleared."
 ```
 
 将脚本放置在 `/opt/homebrew/bin/` 后，可配合由设置页生成的 `com.xstream.tun2socks.plist` 通过 `launchctl load` 启动，停止时运行 `sudo bash stop_tun2socks.sh` 清理路由。
