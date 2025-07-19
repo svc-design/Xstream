@@ -9,6 +9,7 @@ import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
+import '../templates/tun2socks_service_macos_template.dart';
 
 class VpnNode {
   String name;
@@ -309,7 +310,9 @@ class Tun2socksService {
   static Future<String> initScripts(String password) async {
     switch (Platform.operatingSystem) {
       case 'macos':
-        return await NativeBridge.installTun2socksScripts(password);
+        final content = renderTun2socksPlist(scriptDir: '/opt/homebrew/bin');
+        await NativeBridge.installTun2socksScripts(password);
+        return await NativeBridge.installTun2socksPlist(content, password);
       default:
         return '当前平台暂不支持';
     }
