@@ -306,6 +306,15 @@ class VpnConfig {
 }
 
 class Tun2socksService {
+  static Future<String> initScripts(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return await NativeBridge.installTun2socksScripts(password);
+      default:
+        return '当前平台暂不支持';
+    }
+  }
+
   static Future<String> start(String password) async {
     switch (Platform.operatingSystem) {
       case 'macos':

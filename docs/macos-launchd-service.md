@@ -66,4 +66,4 @@ killall tun2socks 2>/dev/null || true
 echo "tun2socks service unloaded"
 ```
 
-将以上两个脚本放置在 `macos/Resources/tun2socks/` 目录下后，执行 `sudo bash start_tun2socks.sh` 即可安装并启动服务，重启后也会自动运行。若需手动停止或禁用开机启动，运行 `sudo bash stop_tun2socks.sh`。
+将以上两个脚本放置在 `/opt/homebrew/bin/` 目录下后，执行 `sudo bash start_tun2socks.sh` 即可安装并启动服务，重启后也会自动运行。若需手动停止或禁用开机启动，运行 `sudo bash stop_tun2socks.sh`。

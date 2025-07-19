@@ -82,7 +82,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       logMessage: (msg) => addAppLog(msg),
     );
 
-    // 初始化 tun2socks 服务脚本
+    // 初始化并重启 tun2socks 服务
+    await Tun2socksService.initScripts(password);
     await Tun2socksService.stop(password);
     await Tun2socksService.start(password);
   }
