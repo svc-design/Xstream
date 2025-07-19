@@ -74,11 +74,14 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     NativeBridge.initializeLogger((log) {
       addAppLog("[macOS] $log");
     });
+
+    GlobalState.connectionMode.addListener(_onConnectionModeChanged);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this); // ✅ 注销生命周期观察器
+    GlobalState.connectionMode.removeListener(_onConnectionModeChanged);
     super.dispose();
   }
 
@@ -197,6 +200,24 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  Future<void> _onConnectionModeChanged() async {
+    if (!GlobalState.isUnlocked.value) return;
+    final password = GlobalState.sudoPassword.value;
+    if (password.isEmpty) return;
+
+    final mode = GlobalState.connectionMode.value;
+    String msg;
+    if (mode == 'VPN') {
+      msg = await NativeBridge.startTun2socks(password);
+    } else {
+      msg = await NativeBridge.stopTun2socks(password);
+    }
+    addAppLog('[tun2socks] $msg');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   @override

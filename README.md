@@ -44,6 +44,9 @@
 - 📱 [iOS 设计文档](docs/ios-design.md)
 - 🐧 [Linux systemd 运行指南](docs/linux-xray-systemd.md)
 - 🪟 [Windows 计划任务运行指南](docs/windows-task-scheduler.md)
+- 🍎 [macOS tun2socks 全局代理](docs/macos-global-vpn.md)
+
+切换到 **VPN** 模式后，应用会自动启动内置的 tun2socks 服务；选择 **仅代理** 则停止该服务。
 
 
 更多平台构建步骤与桥接架构可参考下列文档：
