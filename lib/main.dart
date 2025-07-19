@@ -10,7 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart' show GlobalState;
+import 'utils/global_config.dart' show GlobalState, DnsConfig;
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
@@ -18,6 +18,7 @@ import 'services/vpn_config_service.dart';
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TelemetryService.init();
+  await DnsConfig.init();
   final debug = args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
   GlobalState.debugMode.value = debug;

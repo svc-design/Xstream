@@ -8,7 +8,11 @@ const String defaultXrayJsonTemplate = r'''
   "dns": {
     "servers": [
       {
-        "address": "https://1.1.1.1/dns-query",
+        "address": "<DNS1>",
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "<DNS2>",
         "queryStrategy": "UseIPv4"
       },
       {

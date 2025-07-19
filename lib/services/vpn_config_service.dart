@@ -232,7 +232,9 @@ class VpnConfig {
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
-          .replaceAll('<UUID>', uuid);
+          .replaceAll('<UUID>', uuid)
+          .replaceAll('<DNS1>', DnsConfig.dns1.value)
+          .replaceAll('<DNS2>', DnsConfig.dns2.value);
 
       final jsonObj = jsonDecode(replaced);
         final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
