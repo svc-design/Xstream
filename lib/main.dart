@@ -208,11 +208,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (password.isEmpty) return;
 
     final mode = GlobalState.connectionMode.value;
+    addAppLog('切换模式为 $mode');
     String msg;
     if (mode == 'VPN') {
-      msg = await NativeBridge.startTun2socks(password);
+      msg = await Tun2socksService.start(password);
     } else {
-      msg = await NativeBridge.stopTun2socks(password);
+      msg = await Tun2socksService.stop(password);
     }
     addAppLog('[tun2socks] $msg');
     if (mounted) {

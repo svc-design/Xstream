@@ -304,3 +304,33 @@ class VpnConfig {
     return vpnNodesJsonContent;
   }
 }
+
+class Tun2socksService {
+  static Future<String> start(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return await NativeBridge.startTun2socks(password);
+      case 'linux':
+      case 'windows':
+      case 'android':
+      case 'ios':
+        return '暂未实现';
+      default:
+        return '当前平台暂不支持';
+    }
+  }
+
+  static Future<String> stop(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return await NativeBridge.stopTun2socks(password);
+      case 'linux':
+      case 'windows':
+      case 'android':
+      case 'ios':
+        return '暂未实现';
+      default:
+        return '当前平台暂不支持';
+    }
+  }
+}
