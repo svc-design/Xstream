@@ -9,6 +9,12 @@ func StopXray() -> UnsafeMutablePointer<CChar>?
 @_silgen_name("FreeCString")
 func FreeCString(_ str: UnsafeMutablePointer<CChar>)
 
+@_silgen_name("tun2socks_start")
+func tun2socks_start(_ ifname: UnsafePointer<CChar>, _ proxy: UnsafePointer<CChar>, _ dns: UnsafePointer<CChar>)
+
+@_silgen_name("tun2socks_stop")
+func tun2socks_stop()
+
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
     private var activeSettings: NEPacketTunnelNetworkSettings?
@@ -32,14 +38,28 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         settings.proxySettings = proxy
 
         setTunnelNetworkSettings(settings) { [weak self] error in
-            if error == nil {
-                self?.activeSettings = settings
+            if let err = error {
+                completionHandler(err)
+                return
             }
-            completionHandler(error)
+            self?.activeSettings = settings
+
+            DispatchQueue.global().async {
+                "utun233".withCString { ifPtr in
+                    "127.0.0.1:1080".withCString { proxyPtr in
+                        "8.8.8.8".withCString { dnsPtr in
+                            tun2socks_start(ifPtr, proxyPtr, dnsPtr)
+                        }
+                    }
+                }
+            }
+
+            completionHandler(nil)
         }
     }
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
+        tun2socks_stop()
         stopLocalProxy()
         completionHandler()
     }
