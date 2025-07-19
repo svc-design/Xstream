@@ -81,6 +81,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setMessage: (msg) => addAppLog(msg),
       logMessage: (msg) => addAppLog(msg),
     );
+
+    // 初始化并重启 tun2socks 服务
+    await Tun2socksService.initScripts(password);
+    await Tun2socksService.stop(password);
+    await Tun2socksService.start(password);
   }
 
   void _onInitXray() async {

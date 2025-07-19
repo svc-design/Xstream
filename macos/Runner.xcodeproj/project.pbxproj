@@ -44,7 +44,7 @@
                 427575FE6A38263A6A11281E /* NativeBridge+Tun2socks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */; };
                 A1DF6B5120C9CDC54B313AE2 /* NativeBridge+Tun2socks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */; };
                 97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
-                97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
+               97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
                2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */ = {isa = PBXBuildFile; fileRef = 3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */; };
 /* End PBXBuildFile section */
 
@@ -231,11 +231,11 @@
                03C9FB329FA32ACD0E329818 /* tun2socks */ = {
                         isa = PBXGroup;
                         children = (
-                                3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */,
-                        );
-                        path = tun2socks;
-                        sourceTree = "<group>";
-                };
+                               3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */,
+                       );
+                       path = tun2socks;
+                       sourceTree = "<group>";
+               };
                 D73912EC22F37F3D000D13A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -359,11 +359,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                                97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
-                               2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
+                               97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
+                              2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
                                972D45842DF2D0D700A356CC /* xray in Resources */,
                                972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
-                        );
+                       );
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		33CC10EB2044A3C60003C045 /* Resources */ = {
@@ -373,10 +373,10 @@
                                 972D45862DF2D0D700A356CC /* xray in Resources */,
                                 972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
                                 33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
-                                33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+                               33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
                                97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,
                                2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
-                        );
+                       );
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
