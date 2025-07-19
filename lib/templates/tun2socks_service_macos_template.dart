@@ -8,7 +8,7 @@ const String defaultTun2socksPlistTemplate = r'''<?xml version="1.0" encoding="U
   <string>com.xstream.tun2socks</string>
   <key>ProgramArguments</key>
   <array>
-    <string><SCRIPT_DIR>/tun2socks_service.sh</string>
+    <string><SCRIPT_DIR>/start_tun2socks.sh</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
