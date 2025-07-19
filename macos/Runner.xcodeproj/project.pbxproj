@@ -45,11 +45,7 @@
                 A1DF6B5120C9CDC54B313AE2 /* NativeBridge+Tun2socks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */; };
                 97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
                 97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
-                8CE2C3374A5C92118CDD5F16 /* start_tun2socks.sh in Resources */ = {isa = PBXBuildFile; fileRef = AABB215D4C873AA1021682C0 /* start_tun2socks.sh */; };
-               B58CD0DFD2129D9D6C2F0E02 /* stop_tun2socks.sh in Resources */ = {isa = PBXBuildFile; fileRef = F07F31FFEDF52374B2B71F1A /* stop_tun2socks.sh */; };
                2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */ = {isa = PBXBuildFile; fileRef = 3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */; };
-               18FD5298F661C73ACE0AD09E /* start_tun2socks.sh in Resources */ = {isa = PBXBuildFile; fileRef = AABB215D4C873AA1021682C0 /* start_tun2socks.sh */; };
-               B3C35A18F556AD0B3750796C /* stop_tun2socks.sh in Resources */ = {isa = PBXBuildFile; fileRef = F07F31FFEDF52374B2B71F1A /* stop_tun2socks.sh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,8 +112,6 @@
                 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
                 EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Tun2socks.swift"; sourceTree = "<group>"; };
                 97AB92F72DF3F9FA00393014 /* reset_xray.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = reset_xray.sh; path = Resources/xray/reset_xray.sh; sourceTree = SOURCE_ROOT; };
-               AABB215D4C873AA1021682C0 /* start_tun2socks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = start_tun2socks.sh; path = Resources/tun2socks/start_tun2socks.sh; sourceTree = SOURCE_ROOT; };
-               F07F31FFEDF52374B2B71F1A /* stop_tun2socks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = stop_tun2socks.sh; path = Resources/tun2socks/stop_tun2socks.sh; sourceTree = SOURCE_ROOT; };
                3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = tun2socks_service.sh; path = Resources/tun2socks/tun2socks_service.sh; sourceTree = SOURCE_ROOT; };
                E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -237,8 +231,6 @@
                03C9FB329FA32ACD0E329818 /* tun2socks */ = {
                         isa = PBXGroup;
                         children = (
-                                AABB215D4C873AA1021682C0 /* start_tun2socks.sh */,
-                                F07F31FFEDF52374B2B71F1A /* stop_tun2socks.sh */,
                                 3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */,
                         );
                         path = tun2socks;
@@ -368,8 +360,6 @@
 			buildActionMask = 2147483647;
 			files = (
                                 97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
-                               8CE2C3374A5C92118CDD5F16 /* start_tun2socks.sh in Resources */,
-                               B58CD0DFD2129D9D6C2F0E02 /* stop_tun2socks.sh in Resources */,
                                2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
                                972D45842DF2D0D700A356CC /* xray in Resources */,
                                972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
@@ -385,8 +375,6 @@
                                 33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
                                 33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
                                97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,
-                               18FD5298F661C73ACE0AD09E /* start_tun2socks.sh in Resources */,
-                               B3C35A18F556AD0B3750796C /* stop_tun2socks.sh in Resources */,
                                2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
                         );
 			runOnlyForDeploymentPostprocessing = 0;
