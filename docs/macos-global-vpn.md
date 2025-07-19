@@ -61,3 +61,4 @@ bash scripts/start-tun2socks-macos.sh
 
 在图形界面中，可通过首页右下角的模式切换按钮选择 **VPN** 或 **仅代理**。
 选择 **VPN** 会触发 `tun2socks` 服务启动；选择 **仅代理** 则会停止该服务。
+

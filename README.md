@@ -48,10 +48,16 @@
 
 切换到 **VPN** 模式后，应用会自动启动内置的 tun2socks 服务；选择 **仅代理** 则停止该服务。
 
-
 更多平台构建步骤与桥接架构可参考下列文档：
 
 - [Windows 构建指南](docs/windows-build.md)
 - [Linux 构建须知](docs/linux-build.md)
 - [iOS 设计文档](docs/ios-design.md#xray-core-%E9%9B%86%E6%88%90)
 - [FFI 桥接架构](docs/ffi-bridge-architecture.md)
+
+## 📚 许可证与致谢
+
+- 本项目整体遵循 [GNU GPLv3](LICENSE) 开源协议。
+- VPN/TUN 功能部分引用了 [tun2socks](https://github.com/xjasonlyu/tun2socks) ，该项目基于 MIT License 发布。
+- 核心网络功能依赖 [Xray-core](https://github.com/XTLS/Xray-core) ，遵循 Mozilla Public License 2.0。
+- 桥接库 [libXray](https://github.com/XTLS/libXray) 使用 MIT License 发布。
