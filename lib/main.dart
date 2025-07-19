@@ -9,10 +9,9 @@ import 'screens/about_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
-import 'utils/log_store.dart';
 import 'utils/native_bridge.dart';
-import 'widgets/log_console.dart';
-import 'utils/global_config.dart' show GlobalState, logConsoleKey;
+import 'utils/global_config.dart' show GlobalState;
+import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
 
@@ -73,8 +72,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this); // ✅ 注册生命周期观察器
 
     NativeBridge.initializeLogger((log) {
-      logConsoleKey.currentState?.addLog("[macOS] $log");
-      LogStore.addLog(LogLevel.info, "[macOS] $log");
+      addAppLog("[macOS] $log");
     });
   }
 
@@ -126,6 +124,38 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void _openAddConfig() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+    );
+  }
+
+  void _showLanguageSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final current = GlobalState.locale.value;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<Locale>(
+              value: const Locale('zh'),
+              groupValue: current,
+              title: const Text('中文'),
+              onChanged: (loc) {
+                if (loc != null) GlobalState.locale.value = loc;
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<Locale>(
+              value: const Locale('en'),
+              groupValue: current,
+              title: const Text('English'),
+              onChanged: (loc) {
+                if (loc != null) GlobalState.locale.value = loc;
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -184,6 +214,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text(''),
         actions: [
+          IconButton(
+            tooltip: context.l10n.get('language'),
+            icon: const Icon(Icons.language),
+            onPressed: _showLanguageSelector,
+          ),
           IconButton(
             tooltip: context.l10n.get('addConfig'),
             icon: const Icon(Icons.add),
