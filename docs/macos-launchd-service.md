@@ -9,21 +9,34 @@
 ```bash
 #!/bin/bash
 
-PROXY="socks5://127.0.0.1:1080"
+set -e
+
 TUN_DEV="utun123"
 TUN_IP="198.18.0.1"
-IFACE="en0"
+ROUTES=("0.0.0.0/1" "128.0.0.0/1")
+EXCLUDE=("10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16")
 
-tun2socks -device "$TUN_DEV" -proxy "$PROXY" -interface "$IFACE" &
+GW_IF=$(route get 8.8.8.8 | awk '/interface: /{print $2}')
+
+sudo nohup /opt/homebrew/bin/tun2socks \
+  -device "$TUN_DEV" \
+  -proxy socks5://127.0.0.1:1080 \
+  -interface "$GW_IF" \
+  > /tmp/log 2>&1 &
+
 sleep 1
 
-sudo ifconfig "$TUN_DEV" "$TUN_IP" "$TUN_IP" up
+sudo ifconfig "$TUN_DEV" inet "$TUN_IP" "$TUN_IP" netmask 255.255.255.0 up
 
-for net in 1.0.0.0/8 2.0.0.0/7 4.0.0.0/6 8.0.0.0/5 \
-           16.0.0.0/4 32.0.0.0/3 64.0.0.0/2 128.0.0.0/1 \
-           198.18.0.0/15; do
-    sudo route add -net "$net" "$TUN_IP"
+for net in "${ROUTES[@]}"; do
+  sudo route -n add -net "$net" -interface "$TUN_DEV"
 done
+
+for net in "${EXCLUDE[@]}"; do
+  sudo route -n delete -net "$net" 2>/dev/null || true
+done
+
+echo "✅ tun2socks 启动完成，流量已劫持到 $TUN_DEV"
 ```
 
 ## 停止脚本
