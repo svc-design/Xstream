@@ -49,6 +49,6 @@ export CC
 export CXX
 
 echo ">>> Building Go shared library"
-CC=$CC GOOS=$GOOS GOARCH=$GOARCH go build -buildmode=c-shared -o "$FLUTTER_LIB_DIR/libgo_native_bridge.so"
+CC=$CC GOOS=$GOOS GOARCH=$GOARCH go build -buildmode=c-shared -ldflags="-s -w" -o "$FLUTTER_LIB_DIR/libgo_native_bridge.so"
 
 echo ">>> Build complete: $FLUTTER_LIB_DIR/libgo_native_bridge.so"
