@@ -5,9 +5,56 @@ const String defaultXrayJsonTemplate = r'''
   "log": {
     "loglevel": "info"
   },
+  "dns": {
+    "servers": [
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "tag": "localDnsQuery",
+        "address": "223.5.5.5",
+        "domains": [
+          "geosite:PRIVATE",
+          "geosite:CN"
+        ],
+        "queryStrategy": "UseIPv4"
+      }
+    ],
+    "queryStrategy": "UseIPv4",
+    "disableFallbackIfMatch": true,
+    "tag": "dnsQuery"
+  },
   "routing": {
     "domainStrategy": "IPIfNonMatch",
-    "rules": []
+    "domainMatcher": "hybrid",
+    "rules": [
+      {
+        "domainMatcher": "hybrid",
+        "inboundTag": [
+          "dnsQuery"
+        ],
+        "outboundTag": "proxy",
+        "ruleTag": "dnsQuery"
+      },
+      {
+        "domainMatcher": "hybrid",
+        "port": "53",
+        "inboundTag": [
+          "socksIn"
+        ],
+        "outboundTag": "dnsOut",
+        "ruleTag": "dnsOut"
+      },
+      {
+        "domainMatcher": "hybrid",
+        "inboundTag": [
+          "localDnsQuery"
+        ],
+        "outboundTag": "direct",
+        "ruleTag": "custom"
+      }
+    ]
   },
   "inbounds": [
     {
@@ -68,6 +115,18 @@ const String defaultXrayJsonTemplate = r'''
     {
       "protocol": "blackhole",
       "tag": "block"
+    },
+    {
+      "protocol": "dns",
+      "settings": {
+        "nonIPQuery": "skip"
+      },
+      "tag": "dnsOut",
+      "streamSettings": {
+        "sockopt": {
+          "dialerProxy": "proxy"
+        }
+      }
     }
   ]
 }
