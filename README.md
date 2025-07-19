@@ -58,3 +58,5 @@
 
 - 本项目整体遵循 [GNU GPLv3](LICENSE) 开源协议。
 - VPN/TUN 功能部分引用了 [tun2socks](https://github.com/xjasonlyu/tun2socks) ，该项目基于 MIT License 发布。
+- 核心网络功能依赖 [Xray-core](https://github.com/XTLS/Xray-core) ，遵循 Mozilla Public License 2.0。
+- 桥接库 [libXray](https://github.com/XTLS/libXray) 使用 MIT License 发布。
