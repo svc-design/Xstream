@@ -1,12 +1,12 @@
 #!/bin/bash
-
 # Install and load launchd service for tun2socks
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLIST="/Library/LaunchDaemons/com.xstream.tun2socks.plist"
 
-cat > "$PLIST" <<PLIST
+create_plist() {
+  cat > "$PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -22,10 +22,18 @@ cat > "$PLIST" <<PLIST
 </dict>
 </plist>
 PLIST
+  chown root:wheel "$PLIST"
+  chmod 644 "$PLIST"
+}
 
-chown root:wheel "$PLIST"
-chmod 644 "$PLIST"
+load_service() {
+  launchctl load -w "$PLIST"
+}
 
-launchctl load -w "$PLIST"
+main() {
+  create_plist
+  load_service
+  echo "tun2socks service loaded"
+}
 
-echo "tun2socks service loaded"
+main "$@"
