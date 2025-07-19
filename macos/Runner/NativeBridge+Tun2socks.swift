@@ -1,9 +1,10 @@
 import Foundation
 import FlutterMacOS
 
-fileprivate let startTun2socksScript = """#!/bin/bash
+fileprivate let startTun2socksScript = """
+#!/bin/bash
 
-# \u5b89\u88c5\u5e76\u52a0\u8f7d launchd \u670d\u52a1
+# 安装并加载 launchd 服务
 set -e
 
 SCRIPT_DIR=\"$(cd \"$(dirname \"$0\")\" && pwd)\"
@@ -33,9 +34,10 @@ launchctl load -w \"$PLIST\"
 echo \"tun2socks service loaded\"
 """
 
-fileprivate let stopTun2socksScript = """#!/bin/bash
+fileprivate let stopTun2socksScript = """
+#!/bin/bash
 
-# \u5378\u8f7d launchd \u670d\u52a1\u5e76\u6e05\u7406\u8def\u7531
+# 卸载 launchd 服务并清理路由
 set -e
 
 PLIST=\"/Library/LaunchDaemons/com.xstream.tun2socks.plist\"
@@ -55,7 +57,8 @@ killall tun2socks 2>/dev/null || true
 echo \"tun2socks service unloaded\"
 """
 
-fileprivate let serviceScript = """#!/bin/bash
+fileprivate let serviceScript = """
+#!/bin/bash
 
 # Service script executed via launchd to run tun2socks and configure routing
 PROXY=\"socks5://127.0.0.1:1080\"
@@ -109,9 +112,9 @@ extension AppDelegate {
   }
 
   private func runInstallTun2socksScripts(password: String, result: @escaping FlutterResult) {
-    let startData = startTun2socksScript.data(using: .utf8)!.base64EncodedString()
-    let stopData = stopTun2socksScript.data(using: .utf8)!.base64EncodedString()
-    let serviceData = serviceScript.data(using: .utf8)!.base64EncodedString()
+    let startData = startTun2socksScript.data(using: String.Encoding.utf8)!.base64EncodedString()
+    let stopData = stopTun2socksScript.data(using: String.Encoding.utf8)!.base64EncodedString()
+    let serviceData = serviceScript.data(using: String.Encoding.utf8)!.base64EncodedString()
 
     let shell = """
 echo \"\(password)\" | sudo -S bash -c 'install_dir=/opt/homebrew/bin
