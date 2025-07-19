@@ -28,3 +28,4 @@ flutter:
     - assets/vpn_nodes.json
     - assets/xray-template.json
     - assets/xray-template.plist
+    - assets/xray.service

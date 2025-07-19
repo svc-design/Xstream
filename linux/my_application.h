@@ -2,9 +2,23 @@
 #define FLUTTER_MY_APPLICATION_H_
 
 #include <gtk/gtk.h>
+#include <flutter_linux/fl_method_channel.h>
 
-G_DECLARE_FINAL_TYPE(MyApplication, my_application, MY, APPLICATION,
-                     GtkApplication)
+typedef struct _MyApplication MyApplication;
+typedef struct _MyApplicationClass MyApplicationClass;
+
+struct _MyApplication {
+  GtkApplication parent_instance;
+  char** dart_entrypoint_arguments;
+  FlMethodChannel* native_channel;
+  FlMethodChannel* logger_channel;
+};
+
+struct _MyApplicationClass {
+  GtkApplicationClass parent_class;
+};
+
+GType my_application_get_type(void);
 
 /**
  * my_application_new:

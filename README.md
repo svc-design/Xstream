@@ -38,3 +38,4 @@
 
 - 📘 [用户使用手册](docs/user-manual.md)
 - 🛠️ [开发者文档（macOS 开发环境搭建）](docs/dev-guide.md)
+- 🖥️ [Linux systemd 服务配置](docs/linux-systemd.md)
