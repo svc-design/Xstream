@@ -70,7 +70,7 @@ class AppLocalizations {
       'vpn': '隧道模式',
       'proxyOnly': '代理模式',
       'home': '首页',
-      'proxy': '代理',
+      'proxy': '节点',
       'settings': '设置',
       'logs': '日志',
       'help': '帮助',
