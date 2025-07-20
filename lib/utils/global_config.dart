@@ -50,6 +50,9 @@ class GlobalState {
   /// 遥测开关：true 表示发送匿名统计信息
   static final ValueNotifier<bool> telemetryEnabled = ValueNotifier<bool>(false);
 
+  /// 全局代理开关
+  static final ValueNotifier<bool> globalProxy = ValueNotifier<bool>(false);
+
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
 
