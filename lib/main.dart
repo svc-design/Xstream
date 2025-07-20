@@ -177,27 +177,35 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  leading: Radio<String>(
-                    value: 'VPN',
-                    groupValue: mode,
-                    onChanged: (v) {
-                      if (v != null) GlobalState.connectionMode.value = v;
-                      Navigator.pop(context);
-                    },
+                Tooltip(
+                  message: context.l10n.get('vpnDesc'),
+                  child: ListTile(
+                    leading: Radio<String>(
+                      value: 'VPN',
+                      groupValue: mode,
+                      onChanged: (v) {
+                        if (v != null) GlobalState.connectionMode.value = v;
+                        Navigator.pop(context);
+                      },
+                    ),
+                    title: Text(context.l10n.get('vpn')),
+                    subtitle: SelectableText(context.l10n.get('vpnDesc')),
                   ),
-                  title: Text(context.l10n.get('vpn')),
                 ),
-                ListTile(
-                  leading: Radio<String>(
-                    value: '仅代理',
-                    groupValue: mode,
-                    onChanged: (v) {
-                      if (v != null) GlobalState.connectionMode.value = v;
-                      Navigator.pop(context);
-                    },
+                Tooltip(
+                  message: context.l10n.get('proxyDesc'),
+                  child: ListTile(
+                    leading: Radio<String>(
+                      value: '仅代理',
+                      groupValue: mode,
+                      onChanged: (v) {
+                        if (v != null) GlobalState.connectionMode.value = v;
+                        Navigator.pop(context);
+                      },
+                    ),
+                    title: Text(context.l10n.get('proxyOnly')),
+                    subtitle: SelectableText(context.l10n.get('proxyDesc')),
                   ),
-                  title: Text(context.l10n.get('proxyOnly')),
                 ),
               ],
             );
@@ -285,9 +293,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         valueListenable: GlobalState.tunnelProxyEnabled,
         builder: (context, enabled, child) {
           if (!enabled) return const SizedBox.shrink();
-          return FloatingActionButton(
-            onPressed: _showModeSelector,
-            child: const Icon(Icons.tune),
+          return Tooltip(
+            message: context.l10n.get('modeSwitch'),
+            child: FloatingActionButton(
+              onPressed: _showModeSelector,
+              child: const Icon(Icons.tune),
+            ),
           );
         },
       ),

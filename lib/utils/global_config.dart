@@ -53,7 +53,7 @@ class GlobalState {
   /// 全局代理开关
   static final ValueNotifier<bool> globalProxy = ValueNotifier<bool>(false);
   
-  /// 隧道代理模式开关
+  /// 隧道模式开关
   static final ValueNotifier<bool> tunnelProxyEnabled =
       ValueNotifier<bool>(false);
 

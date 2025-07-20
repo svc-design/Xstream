@@ -47,7 +47,7 @@
 - 🍎 [macOS tun2socks 全局代理](docs/macos-global-vpn.md)
 - 🍎 [macOS launchd 服务脚本](docs/macos-launchd-service.md)
 
-切换到 **隧道代理模式** 后，应用会自动启动内置的 tun2socks 服务；选择 **socks/http代理模式** 则停止该服务。
+切换到 **隧道模式** 后，应用会自动启动内置的 tun2socks 服务；选择 **代理模式** 则停止该服务。
 
 更多平台构建步骤与桥接架构可参考下列文档：
 
