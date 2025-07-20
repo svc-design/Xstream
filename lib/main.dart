@@ -11,6 +11,7 @@ import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
 import 'utils/global_config.dart' show GlobalState, DnsConfig;
+import 'services/experimental/experimental_features.dart';
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
@@ -19,6 +20,7 @@ void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TelemetryService.init();
   await DnsConfig.init();
+  await ExperimentalFeatures.init();
   final debug = args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
   GlobalState.debugMode.value = debug;
@@ -277,9 +279,15 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           Expanded(child: IndexedStack(index: _currentIndex, children: pages)),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showModeSelector,
-        child: const Icon(Icons.tune),
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: GlobalState.tunnelProxyEnabled,
+        builder: (context, enabled, child) {
+          if (!enabled) return const SizedBox.shrink();
+          return FloatingActionButton(
+            onPressed: _showModeSelector,
+            child: const Icon(Icons.tune),
+          );
+        },
       ),
     );
   }
