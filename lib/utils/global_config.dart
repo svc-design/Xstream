@@ -166,7 +166,30 @@ class GlobalApplicationConfig {
       case 'macos':
         final bundleId = await getBundleId();
         final baseDir = await getApplicationSupportDirectory();
-        final xstreamDir = Directory('${baseDir.path}/$bundleId');
+        var supportPath = baseDir.path;
+
+        // If sandboxed, path_provider returns
+        // ~/Library/Containers/<bundleId>/Data/Library/Application Support
+        // We need to resolve to the classic Application Support directory so
+        // that LaunchAgent services can access the config file.
+        if (supportPath.contains('/Containers/')) {
+          final home = Platform.environment['HOME'];
+          if (home != null) {
+            final segments = supportPath.split(Platform.pathSeparator);
+            final containerIndex = segments.indexOf('Containers');
+            if (containerIndex != -1 && containerIndex + 1 < segments.length) {
+              final containerName = segments[containerIndex + 1];
+              supportPath =
+                  '$home/Library/Application Support/$containerName';
+            }
+          }
+        } else {
+          // Unsandboxed path already points to
+          // ~/Library/Application Support/<container>
+          supportPath = supportPath;
+        }
+
+        final xstreamDir = Directory('$supportPath/$bundleId');
         await xstreamDir.create(recursive: true);
         return '${xstreamDir.path}/vpn_nodes.json';
 
