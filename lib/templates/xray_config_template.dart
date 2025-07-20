@@ -16,53 +16,20 @@ const String defaultXrayJsonTemplate = r'''
         "queryStrategy": "UseIPv4"
       },
       {
-        "tag": "localDnsQuery",
-        "address": "223.5.5.5",
-        "domains": [
-          "geosite:PRIVATE",
-          "geosite:CN"
-        ],
+        "address": "1.1.1.1",
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "8.8.8.8",
         "queryStrategy": "UseIPv4"
       }
     ],
     "queryStrategy": "UseIPv4",
-    "disableFallbackIfMatch": true,
-    "tag": "dnsQuery"
-  },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "domainMatcher": "hybrid",
-    "rules": [
-      {
-        "domainMatcher": "hybrid",
-        "inboundTag": [
-          "dnsQuery"
-        ],
-        "outboundTag": "proxy",
-        "ruleTag": "dnsQuery"
-      },
-      {
-        "domainMatcher": "hybrid",
-        "port": "53",
-        "inboundTag": [
-          "socksIn"
-        ],
-        "outboundTag": "dnsOut",
-        "ruleTag": "dnsOut"
-      },
-      {
-        "domainMatcher": "hybrid",
-        "inboundTag": [
-          "localDnsQuery"
-        ],
-        "outboundTag": "direct",
-        "ruleTag": "custom"
-      }
-    ]
+    "disableFallbackIfMatch": true
   },
   "inbounds": [
     {
-      "listen": "127.0.0.1",
+      "listen": "0.0.0.0",
       "port": 1080,
       "protocol": "socks",
       "settings": {
@@ -70,16 +37,24 @@ const String defaultXrayJsonTemplate = r'''
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls"]
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
       }
     },
     {
-      "listen": "127.0.0.1",
+      "listen": "0.0.0.0",
       "port": 1081,
       "protocol": "http",
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls"]
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
       }
     }
   ],
@@ -121,17 +96,15 @@ const String defaultXrayJsonTemplate = r'''
       "tag": "block"
     },
     {
+      "tag": "dns",
       "protocol": "dns",
-      "settings": {
-        "nonIPQuery": "skip"
-      },
-      "tag": "dnsOut",
-      "streamSettings": {
-        "sockopt": {
-          "dialerProxy": "proxy"
-        }
+      "proxySettings": {
+        "tag": "proxy"
       }
     }
-  ]
+  ],
+  "routing": {
+    "rules": []
+  }
 }
 ''';

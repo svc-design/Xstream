@@ -52,6 +52,10 @@ class GlobalState {
 
   /// 全局代理开关
   static final ValueNotifier<bool> globalProxy = ValueNotifier<bool>(false);
+  
+  /// 隧道代理模式开关
+  static final ValueNotifier<bool> tunnelProxyEnabled =
+      ValueNotifier<bool>(false);
 
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);

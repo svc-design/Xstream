@@ -258,6 +258,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ]),
+                    _buildSection(context.l10n.get('experimentalFeatures'), [
+                      SizedBox(
+                        width: double.infinity,
+                        child: SwitchListTile(
+                          secondary: const Icon(Icons.science),
+                          title: Text(context.l10n.get('tunnelProxyMode'),
+                              style: _menuTextStyle),
+                          value: GlobalState.tunnelProxyEnabled.value,
+                          onChanged: (v) {
+                            setState(() =>
+                                GlobalState.tunnelProxyEnabled.value = v);
+                          },
+                        ),
+                      ),
+                    ]),
                     if (!isUnlocked)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
