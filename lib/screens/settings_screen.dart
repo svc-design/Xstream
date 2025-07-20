@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart'
     show GlobalState, buildVersion, DnsConfig;
@@ -231,6 +232,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
                       ),
                       _buildButton(
+                        icon: Icons.security,
+                        label: context.l10n.get('permissionGuide'),
+                        onPressed: _showPermissionGuide,
+                      ),
+                      _buildButton(
                         icon: Icons.restore,
                         label: context.l10n.get('resetAll'),
                         style: _menuButtonStyle.copyWith(
@@ -387,5 +393,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _showPermissionGuide() {
+    if (GlobalState.permissionGuideDone.value) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.l10n.get('permissionGuide')),
+          content: Text(context.l10n.get('permissionFinished')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.get('close')),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    const text = '''1. 允许 /opt/homebrew/、/Library/LaunchDaemons/、~/Library/Application Support/ 目录读写
+2. 允许启动和停止 plist 服务
+3. 允许修改系统代理与 DNS 设置''';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.get('permissionGuide')),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.get('permissionGuideIntro')),
+              const SizedBox(height: 8),
+              const SelectableText(text),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _openSecurityPage,
+                child: Text(context.l10n.get('openPrivacy')),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              GlobalState.permissionGuideDone.value = true;
+              Navigator.pop(context);
+            },
+            child: Text(context.l10n.get('confirm')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openSecurityPage() {
+    if (Platform.isMacOS) {
+      Process.run('open',
+          ['x-apple.systempreferences:com.apple.preference.security']);
+    } else if (Platform.isWindows) {
+      Process.run('cmd', ['/c', 'start', 'ms-settings:privacy']);
+    } else if (Platform.isLinux) {
+      Process.run('xdg-open', ['settings://privacy']);
+    }
   }
 }
