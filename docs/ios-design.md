@@ -44,6 +44,17 @@
 - Apple 不允许公开使用 `NSTask`，如需调用需通过私有 API 或 FFI；文档示例采用 FFI 方式。
 - 由于沙箱机制，无法使用 `tproxy`，仅支持 VPN 模式代理。
 
+## App Store 要求
+
+在提交到 Apple App Store 之前，需要在 Xcode 中启用以下能力：
+
+- **Network Extension**：允许应用创建 `PacketTunnelProvider`。对应的 entitlements
+  文件为 `ios/Runner/Runner.entitlements`，需同时添加到主 App 目标和 PacketTunnel
+  扩展。
+- **App Groups**：用于在主应用与扩展之间共享配置文件，组名默认为 `group.com.xstream`。
+
+确保 `ios/Podfile` 声明 `platform :ios, '14.0'` 以符合最低系统版本要求。
+
 ## 参考
 
 - Apple 官方文档：NetworkExtension Programming Guide
