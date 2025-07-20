@@ -56,9 +56,9 @@ bash scripts/start-tun2socks-macos.sh
 停止服务可执行 `scripts/stop-tun2socks-macos.sh`。
 
 应用现已内置启动和停止逻辑，不再依赖 `start_tun2socks.sh`/`stop_tun2socks.sh`。
-切换到 **VPN** 模式时会在 `/Library/LaunchDaemons` 写入并加载 `com.xstream.tun2socks.plist`，
-切换到 **仅代理** 模式则会卸载并清理该服务。
+切换到 **隧道代理模式** 时会在 `/Library/LaunchDaemons` 写入并加载 `com.xstream.tun2socks.plist`，
+切换到 **socks/http代理模式** 则会卸载并清理该服务。
 
-在图形界面中，可通过首页右下角的模式切换按钮选择 **VPN** 或 **仅代理**。
-选择 **VPN** 会触发 `tun2socks` 服务启动；选择 **仅代理** 则会停止该服务。
+在图形界面中，可通过首页右下角的模式切换按钮选择 **隧道代理模式** 或 **socks/http代理模式**。
+选择 **隧道代理模式** 会触发 `tun2socks` 服务启动；选择 **socks/http代理模式** 则会停止该服务。
 
