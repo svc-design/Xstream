@@ -231,6 +231,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
                       ),
                       _buildButton(
+                        icon: Icons.security,
+                        label: context.l10n.get('permissionGuide'),
+                        onPressed: _showPermissionGuide,
+                      ),
+                      _buildButton(
                         icon: Icons.restore,
                         label: context.l10n.get('resetAll'),
                         style: _menuButtonStyle.copyWith(
@@ -378,6 +383,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(context.l10n.get('collectedData')),
         content: SingleChildScrollView(
           child: SelectableText(json),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.get('close')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionGuide() {
+    const text = '''macOS 权限需求:
+1. 允许 /opt/homebrew/ 目录读写
+2. 允许启动或停止 plist 服务
+3. 允许修改系统代理与 DNS 设置
+
+Windows 权限需求:
+1. 可写入 C:\\Program Files\\Xstream\\
+2. 允许注册计划任务或服务
+3. 允许修改系统代理设置
+
+Linux 权限需求:
+1. 允许写入 /usr/local/bin 或 ~/.local/bin
+2. 允许管理 systemd 服务
+3. 允许修改 DNS 或 iptables 规则''';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.get('permissionGuide')),
+        content: SingleChildScrollView(
+          child: SelectableText(text),
         ),
         actions: [
           TextButton(
