@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/log_console.dart';
 
 const String kUpdateBaseUrl = 'https://artifact.onwalk.net/';
@@ -59,6 +60,26 @@ class GlobalState {
   /// 当前语言环境，默认中文
   static final ValueNotifier<Locale> locale =
       ValueNotifier<Locale>(const Locale('zh'));
+}
+
+/// 管理 DNS 配置，支持保存到本地
+class DnsConfig {
+  static const _dns1Key = 'dnsServer1';
+  static const _dns2Key = 'dnsServer2';
+
+  static final ValueNotifier<String> dns1 =
+      ValueNotifier<String>('https://1.1.1.1/dns-query');
+  static final ValueNotifier<String> dns2 =
+      ValueNotifier<String>('https://8.8.8.8/dns-query');
+
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    dns1.value = prefs.getString(_dns1Key) ?? dns1.value;
+    dns2.value = prefs.getString(_dns2Key) ?? dns2.value;
+
+    dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
+    dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
+  }
 }
 
 /// 用于获取应用相关的配置信息

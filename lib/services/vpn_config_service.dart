@@ -9,6 +9,7 @@ import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
+import '../templates/tun2socks_service_macos_template.dart';
 
 class VpnNode {
   String name;
@@ -231,7 +232,9 @@ class VpnConfig {
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
-          .replaceAll('<UUID>', uuid);
+          .replaceAll('<UUID>', uuid)
+          .replaceAll('<DNS1>', DnsConfig.dns1.value)
+          .replaceAll('<DNS2>', DnsConfig.dns2.value);
 
       final jsonObj = jsonDecode(replaced);
         final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
@@ -302,5 +305,46 @@ class VpnConfig {
     final vpnNodesJsonContent = json.encode([vpnNode]);
     logMessage('✅ vpn_nodes.json 内容生成完成');
     return vpnNodesJsonContent;
+  }
+}
+
+class Tun2socksService {
+  static Future<String> initScripts(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        final content = renderTun2socksPlist(scriptDir: '/opt/homebrew/bin');
+        await NativeBridge.installTun2socksScripts(password);
+        return await NativeBridge.installTun2socksPlist(content, password);
+      default:
+        return '当前平台暂不支持';
+    }
+  }
+
+  static Future<String> start(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return await NativeBridge.startTun2socks(password);
+      case 'linux':
+      case 'windows':
+      case 'android':
+      case 'ios':
+        return '暂未实现';
+      default:
+        return '当前平台暂不支持';
+    }
+  }
+
+  static Future<String> stop(String password) async {
+    switch (Platform.operatingSystem) {
+      case 'macos':
+        return await NativeBridge.stopTun2socks(password);
+      case 'linux':
+      case 'windows':
+      case 'android':
+      case 'ios':
+        return '暂未实现';
+      default:
+        return '当前平台暂不支持';
+    }
   }
 }

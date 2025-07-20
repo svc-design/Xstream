@@ -1,15 +1,13 @@
 #!/bin/bash
-
-# Script to stop tun2socks and clean routes.
-
 TUN_DEV="utun123"
 
-sudo ifconfig "$TUN_DEV" down
+echo "[*] Stopping tun2socks..."
 
-for net in 1.0.0.0/8 2.0.0.0/7 4.0.0.0/6 8.0.0.0/5 \
-           16.0.0.0/4 32.0.0.0/3 64.0.0.0/2 128.0.0.0/1 \
-           198.18.0.0/15; do
-    sudo route delete -net "$net"
+for net in 0.0.0.0/1 128.0.0.0/1 198.18.0.0/15; do
+  sudo route -n delete -net "$net" 2>/dev/null || true
 done
 
-echo "❌ tun2socks stopped"
+sudo pkill -f "tun2socks.*$TUN_DEV" || true
+sudo ifconfig "$TUN_DEV" down 2>/dev/null || true
+
+echo "[*] tun2socks stopped and routes cleared."

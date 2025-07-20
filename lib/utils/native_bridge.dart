@@ -316,6 +316,36 @@ class NativeBridge {
     }
   }
 
+  /// Install tun2socks helper scripts to /opt/homebrew/bin
+  static Future<String> installTun2socksScripts(String password) async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('installTun2socksScripts', {
+        'password': password,
+      });
+      return result ?? '安装完成';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '安装失败: $e';
+    }
+  }
+
+  static Future<String> installTun2socksPlist(String content, String password) async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('installTun2socksPlist', {
+        'content': content,
+        'password': password,
+      });
+      return result ?? '安装完成';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '安装失败: $e';
+    }
+  }
+
   /// Start embedded xray-core via FFI on iOS
   static String startXray(String configJson) {
     if (!_useFfi) {

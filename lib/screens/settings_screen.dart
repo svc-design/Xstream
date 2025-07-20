@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../utils/global_config.dart' show GlobalState, buildVersion;
+import '../../utils/global_config.dart' show GlobalState, buildVersion, DnsConfig;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -81,6 +81,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setMessage: (msg) => addAppLog(msg),
       logMessage: (msg) => addAppLog(msg),
     );
+
+    // 初始化并重启 tun2socks 服务
+    await Tun2socksService.initScripts(password);
+    await Tun2socksService.stop(password);
+    await Tun2socksService.start(password);
   }
 
   void _onInitXray() async {
@@ -218,6 +223,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: isUnlocked ? _onResetAll : null,
                       ),
                     ]),
+                    _buildSection(context.l10n.get('advancedConfig'), [
+                      _buildButton(
+                        icon: Icons.dns,
+                        label: context.l10n.get('dnsConfig'),
+                        onPressed: _showDnsDialog,
+                      ),
+                    ]),
                     if (!isUnlocked)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
@@ -267,6 +279,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _xrayMonitorTimer?.cancel();
     super.dispose();
+  }
+
+  void _showDnsDialog() {
+    final dns1Controller = TextEditingController(text: DnsConfig.dns1.value);
+    final dns2Controller = TextEditingController(text: DnsConfig.dns2.value);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.get('dnsConfig')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: dns1Controller,
+              decoration: InputDecoration(labelText: context.l10n.get('primaryDns')),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: dns2Controller,
+              decoration: InputDecoration(labelText: context.l10n.get('secondaryDns')),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.get('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              DnsConfig.dns1.value = dns1Controller.text.trim();
+              DnsConfig.dns2.value = dns2Controller.text.trim();
+              Navigator.pop(context);
+            },
+            child: Text(context.l10n.get('confirm')),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showTelemetryData() {

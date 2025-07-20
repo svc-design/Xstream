@@ -10,7 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart' show GlobalState;
+import 'utils/global_config.dart' show GlobalState, DnsConfig;
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
@@ -18,6 +18,7 @@ import 'services/vpn_config_service.dart';
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TelemetryService.init();
+  await DnsConfig.init();
   final debug = args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
   GlobalState.debugMode.value = debug;
@@ -74,11 +75,14 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     NativeBridge.initializeLogger((log) {
       addAppLog("[macOS] $log");
     });
+
+    GlobalState.connectionMode.addListener(_onConnectionModeChanged);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this); // ✅ 注销生命周期观察器
+    GlobalState.connectionMode.removeListener(_onConnectionModeChanged);
     super.dispose();
   }
 
@@ -197,6 +201,25 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  Future<void> _onConnectionModeChanged() async {
+    if (!GlobalState.isUnlocked.value) return;
+    final password = GlobalState.sudoPassword.value;
+    if (password.isEmpty) return;
+
+    final mode = GlobalState.connectionMode.value;
+    addAppLog('切换模式为 $mode');
+    String msg;
+    if (mode == 'VPN') {
+      msg = await Tun2socksService.start(password);
+    } else {
+      msg = await Tun2socksService.stop(password);
+    }
+    addAppLog('[tun2socks] $msg');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   @override
