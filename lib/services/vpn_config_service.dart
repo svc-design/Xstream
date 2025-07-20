@@ -166,6 +166,9 @@ class VpnConfig {
         logMessage: logMessage,
       );
     }
+
+    // Reload nodes from file to keep in-memory list in sync
+    await load();
   }
 
   static Future<void> generateContent({
@@ -221,6 +224,8 @@ class VpnConfig {
       setMessage('✅ 服务项已生成: $servicePath');
       setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
+      // Reload nodes from file so that the in-memory list stays updated
+      await load();
     } catch (e) {
       setMessage('生成配置失败: $e');
       logMessage('生成配置失败: $e');
