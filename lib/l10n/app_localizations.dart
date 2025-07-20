@@ -67,7 +67,7 @@ class AppLocalizations {
       'vpn': '隧道代理模式',
       'proxyOnly': 'socks/http代理模式',
       'home': '首页',
-      'proxy': '代理',
+      'proxy': '节点',
       'settings': '设置',
       'logs': '日志',
       'help': '帮助',
