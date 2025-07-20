@@ -7,7 +7,8 @@ import '../bindings/bridge_bindings.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
-  static const MethodChannel _loggerChannel = MethodChannel('com.xstream/logger');
+  static const MethodChannel _loggerChannel =
+      MethodChannel('com.xstream/logger');
 
   static final bool _useFfi =
       Platform.isWindows || Platform.isLinux || Platform.isIOS;
@@ -17,7 +18,9 @@ class NativeBridge {
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
   static BridgeBindings get _ffi {
-    _bindings ??= _useFfi ? BridgeBindings(_openLib()) : throw UnsupportedError('FFI not available');
+    _bindings ??= _useFfi
+        ? BridgeBindings(_openLib())
+        : throw UnsupportedError('FFI not available');
     return _bindings!;
   }
 
@@ -51,8 +54,8 @@ class NativeBridge {
       final p5 = vpnNodesConfigPath.toNativeUtf8();
       final p6 = vpnNodesConfigContent.toNativeUtf8();
       final pwd = password.toNativeUtf8();
-      final resPtr = _ffi.writeConfigFiles(
-          p1.cast(), p2.cast(), p3.cast(), p4.cast(), p5.cast(), p6.cast(), pwd.cast());
+      final resPtr = _ffi.writeConfigFiles(p1.cast(), p2.cast(), p3.cast(),
+          p4.cast(), p5.cast(), p6.cast(), pwd.cast());
       final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(p1);
@@ -316,11 +319,28 @@ class NativeBridge {
     }
   }
 
+  /// Enable or disable system SOCKS proxy on macOS
+  static Future<String> setSystemProxy(bool enable, String password) async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('setSystemProxy', {
+        'enable': enable,
+        'password': password,
+      });
+      return result ?? 'success';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '操作失败: $e';
+    }
+  }
+
   /// Install tun2socks helper scripts to /opt/homebrew/bin
   static Future<String> installTun2socksScripts(String password) async {
     if (!Platform.isMacOS) return '当前平台暂不支持';
     try {
-      final result = await _channel.invokeMethod<String>('installTun2socksScripts', {
+      final result =
+          await _channel.invokeMethod<String>('installTun2socksScripts', {
         'password': password,
       });
       return result ?? '安装完成';
@@ -331,10 +351,12 @@ class NativeBridge {
     }
   }
 
-  static Future<String> installTun2socksPlist(String content, String password) async {
+  static Future<String> installTun2socksPlist(
+      String content, String password) async {
     if (!Platform.isMacOS) return '当前平台暂不支持';
     try {
-      final result = await _channel.invokeMethod<String>('installTun2socksPlist', {
+      final result =
+          await _channel.invokeMethod<String>('installTun2socksPlist', {
         'content': content,
         'password': password,
       });

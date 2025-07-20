@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../utils/global_config.dart' show GlobalState, buildVersion, DnsConfig;
+import '../../utils/global_config.dart'
+    show GlobalState, buildVersion, DnsConfig;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -155,12 +156,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _onToggleGlobalProxy(bool enabled) async {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    final password = GlobalState.sudoPassword.value;
+    if (!isUnlocked) {
+      addAppLog('请先解锁以切换全局代理', level: LogLevel.warning);
+      return;
+    }
+    setState(() => GlobalState.globalProxy.value = enabled);
+    final msg = await NativeBridge.setSystemProxy(enabled, password);
+    addAppLog('全局代理: ${enabled ? "开启" : "关闭"}');
+    addAppLog('[system proxy] $msg');
+  }
+
   void _onCheckUpdate() {
     addAppLog('开始检查更新...');
     UpdateChecker.manualCheck(
       context,
       currentVersion: _currentVersion(),
-      channel: GlobalState.useDailyBuild.value ? UpdateChannel.latest : UpdateChannel.stable,
+      channel: GlobalState.useDailyBuild.value
+          ? UpdateChannel.latest
+          : UpdateChannel.stable,
     );
   }
 
@@ -218,7 +234,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icons.restore,
                         label: context.l10n.get('resetAll'),
                         style: _menuButtonStyle.copyWith(
-                          backgroundColor: WidgetStateProperty.all(Colors.red[400]),
+                          backgroundColor:
+                              WidgetStateProperty.all(Colors.red[400]),
                         ),
                         onPressed: isUnlocked ? _onResetAll : null,
                       ),
@@ -228,6 +245,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icons.dns,
                         label: context.l10n.get('dnsConfig'),
                         onPressed: _showDnsDialog,
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SwitchListTile(
+                          value: GlobalState.globalProxy.value,
+                          onChanged: _onToggleGlobalProxy,
+                          title: Text(
+                            context.l10n.get('globalProxy'),
+                            style: _menuTextStyle,
+                          ),
+                        ),
                       ),
                     ]),
                     _buildSection(context.l10n.get('experimentalFeatures'), [
@@ -250,7 +278,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           context.l10n.get('unlockFirst'),
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ),
                   ],
@@ -260,7 +289,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(height: 32),
             SwitchListTile(
               secondary: const Icon(Icons.bolt),
-              title: Text(context.l10n.get('upgradeDaily'), style: _menuTextStyle),
+              title:
+                  Text(context.l10n.get('upgradeDaily'), style: _menuTextStyle),
               value: GlobalState.useDailyBuild.value,
               onChanged: (v) {
                 setState(() => GlobalState.useDailyBuild.value = v);
@@ -269,7 +299,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.stacked_line_chart),
-              title: Text(context.l10n.get('viewCollected'), style: _menuTextStyle),
+              title: Text(context.l10n.get('viewCollected'),
+                  style: _menuTextStyle),
               trailing: Switch(
                 value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
@@ -281,7 +312,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.system_update),
-              title: Text(context.l10n.get('checkUpdate'), style: _menuTextStyle),
+              title:
+                  Text(context.l10n.get('checkUpdate'), style: _menuTextStyle),
               onTap: _onCheckUpdate,
             ),
           ],
@@ -308,12 +340,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             TextField(
               controller: dns1Controller,
-              decoration: InputDecoration(labelText: context.l10n.get('primaryDns')),
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('primaryDns')),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: dns2Controller,
-              decoration: InputDecoration(labelText: context.l10n.get('secondaryDns')),
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
             ),
           ],
         ),

@@ -15,11 +15,13 @@ import 'services/experimental/experimental_features.dart';
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
+import 'services/global_proxy_service.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TelemetryService.init();
   await DnsConfig.init();
+  await GlobalProxyService.init();
   await ExperimentalFeatures.init();
   final debug = args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
