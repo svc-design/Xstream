@@ -5,27 +5,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../utils/global_config.dart';
 import '../utils/native_bridge.dart';
+import '../utils/validators.dart';
 import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
 import '../templates/tun2socks_service_macos_template.dart';
-
-void _checkNotEmpty(String value, String name) {
-  assert(value.isNotEmpty, '$name is empty: $value');
-  if (value.isEmpty) {
-    debugPrint('❌ $name is empty: $value');
-    throw ArgumentError('$name is empty');
-  }
-}
-
-void _checkNotNull(Object? value, String name) {
-  assert(value != null, '$name is null');
-  if (value == null) {
-    debugPrint('❌ $name is null');
-    throw ArgumentError('$name is null');
-  }
-}
 
 class VpnNode {
   String name;
@@ -46,10 +31,10 @@ class VpnNode {
     required this.serviceName,
     this.enabled = true,
   }) {
-    _checkNotEmpty(name, 'name');
-    _checkNotEmpty(countryCode, 'countryCode');
-    _checkNotEmpty(configPath, 'configPath');
-    _checkNotEmpty(serviceName, 'serviceName');
+    checkNotEmpty(name, 'name');
+    checkNotEmpty(countryCode, 'countryCode');
+    checkNotEmpty(configPath, 'configPath');
+    checkNotEmpty(serviceName, 'serviceName');
   }
 
   factory VpnNode.fromJson(Map<String, dynamic> json) {
@@ -58,10 +43,10 @@ class VpnNode {
     final configPath = json['configPath'] ?? '';
     final serviceName = json['serviceName'] ?? json['plistName'] ?? '';
 
-    _checkNotEmpty(name, 'name');
-    _checkNotEmpty(countryCode, 'countryCode');
-    _checkNotEmpty(configPath, 'configPath');
-    _checkNotEmpty(serviceName, 'serviceName');
+    checkNotEmpty(name, 'name');
+    checkNotEmpty(countryCode, 'countryCode');
+    checkNotEmpty(configPath, 'configPath');
+    checkNotEmpty(serviceName, 'serviceName');
 
     return VpnNode(
       name: name,
@@ -111,7 +96,7 @@ class VpnConfig {
   static List<VpnNode> get nodes => _nodes;
 
   static VpnNode? getNodeByName(String name) {
-    _checkNotEmpty(name, 'name');
+    checkNotEmpty(name, 'name');
     try {
       return _nodes.firstWhere((e) => e.name == name);
     } catch (_) {
@@ -120,17 +105,17 @@ class VpnConfig {
   }
 
   static void addNode(VpnNode node) {
-    _checkNotEmpty(node.name, 'node.name');
+    checkNotEmpty(node.name, 'node.name');
     _nodes.add(node);
   }
 
   static void removeNode(String name) {
-    _checkNotEmpty(name, 'name');
+    checkNotEmpty(name, 'name');
     _nodes.removeWhere((e) => e.name == name);
   }
 
   static void updateNode(VpnNode updated) {
-    _checkNotEmpty(updated.name, 'updated.name');
+    checkNotEmpty(updated.name, 'updated.name');
     final index = _nodes.indexWhere((e) => e.name == updated.name);
     if (index != -1) {
       _nodes[index] = updated;
@@ -150,16 +135,16 @@ class VpnConfig {
   }
 
   static Future<void> importFromJson(String jsonStr) async {
-    _checkNotEmpty(jsonStr, 'jsonStr');
+    checkNotEmpty(jsonStr, 'jsonStr');
     final List<dynamic> jsonList = json.decode(jsonStr);
     _nodes = jsonList.map((e) => VpnNode.fromJson(e)).toList();
     await saveToFile();
   }
 
   static Future<void> deleteNodeFiles(VpnNode node) async {
-    _checkNotEmpty(node.name, 'node.name');
-    _checkNotEmpty(node.configPath, 'node.configPath');
-    _checkNotEmpty(node.serviceName, 'node.serviceName');
+    checkNotEmpty(node.name, 'node.name');
+    checkNotEmpty(node.configPath, 'node.configPath');
+    checkNotEmpty(node.serviceName, 'node.serviceName');
     try {
       final jsonFile = File(node.configPath);
       if (await jsonFile.exists()) {
@@ -185,9 +170,9 @@ class VpnConfig {
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-    _checkNotEmpty(password, 'password');
-    _checkNotNull(setMessage, 'setMessage');
-    _checkNotNull(logMessage, 'logMessage');
+    checkNotEmpty(password, 'password');
+    checkNotNull(setMessage, 'setMessage');
+    checkNotNull(logMessage, 'logMessage');
     final bundleId = await GlobalApplicationConfig.getBundleId();
 
     const port = '1443';
@@ -223,14 +208,14 @@ class VpnConfig {
     required Function(String) setMessage,
     required Function(String) logMessage,
   }) async {
-    _checkNotEmpty(nodeName, 'nodeName');
-    _checkNotEmpty(domain, 'domain');
-    _checkNotEmpty(port, 'port');
-    _checkNotEmpty(uuid, 'uuid');
-    _checkNotEmpty(password, 'password');
-    _checkNotEmpty(bundleId, 'bundleId');
-    _checkNotNull(setMessage, 'setMessage');
-    _checkNotNull(logMessage, 'logMessage');
+    checkNotEmpty(nodeName, 'nodeName');
+    checkNotEmpty(domain, 'domain');
+    checkNotEmpty(port, 'port');
+    checkNotEmpty(uuid, 'uuid');
+    checkNotEmpty(password, 'password');
+    checkNotEmpty(bundleId, 'bundleId');
+    checkNotNull(setMessage, 'setMessage');
+    checkNotNull(logMessage, 'logMessage');
     final code = nodeName.split('-').first.toLowerCase();
     final prefix = GlobalApplicationConfig.xrayConfigPath;
     final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
@@ -283,11 +268,11 @@ class VpnConfig {
   }
 
   static Future<String> _generateXrayJsonConfig(String domain, String port, String uuid, Function(String) setMessage, Function(String) logMessage) async {
-    _checkNotEmpty(domain, 'domain');
-    _checkNotEmpty(port, 'port');
-    _checkNotEmpty(uuid, 'uuid');
-    _checkNotNull(setMessage, 'setMessage');
-    _checkNotNull(logMessage, 'logMessage');
+    checkNotEmpty(domain, 'domain');
+    checkNotEmpty(port, 'port');
+    checkNotEmpty(uuid, 'uuid');
+    checkNotNull(setMessage, 'setMessage');
+    checkNotNull(logMessage, 'logMessage');
     try {
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
@@ -309,10 +294,10 @@ class VpnConfig {
 
   static String _generateServiceContent(
       String nodeCode, String bundleId, String configPath, String serviceName) {
-    _checkNotEmpty(nodeCode, 'nodeCode');
-    _checkNotEmpty(bundleId, 'bundleId');
-    _checkNotEmpty(configPath, 'configPath');
-    _checkNotEmpty(serviceName, 'serviceName');
+    checkNotEmpty(nodeCode, 'nodeCode');
+    checkNotEmpty(bundleId, 'bundleId');
+    checkNotEmpty(configPath, 'configPath');
+    checkNotEmpty(serviceName, 'serviceName');
     try {
       switch (Platform.operatingSystem) {
         case 'macos':
@@ -351,12 +336,12 @@ class VpnConfig {
     Function(String) setMessage,
     Function(String) logMessage,
   ) async {
-    _checkNotEmpty(nodeName, 'nodeName');
-    _checkNotEmpty(nodeCode, 'nodeCode');
-    _checkNotEmpty(serviceName, 'serviceName');
-    _checkNotEmpty(xrayConfigPath, 'xrayConfigPath');
-    _checkNotNull(setMessage, 'setMessage');
-    _checkNotNull(logMessage, 'logMessage');
+    checkNotEmpty(nodeName, 'nodeName');
+    checkNotEmpty(nodeCode, 'nodeCode');
+    checkNotEmpty(serviceName, 'serviceName');
+    checkNotEmpty(xrayConfigPath, 'xrayConfigPath');
+    checkNotNull(setMessage, 'setMessage');
+    checkNotNull(logMessage, 'logMessage');
 
     final vpnNode = {
       'name': nodeName,
@@ -374,7 +359,7 @@ class VpnConfig {
 
 class Tun2socksService {
   static Future<String> initScripts(String password) async {
-    _checkNotEmpty(password, 'password');
+    checkNotEmpty(password, 'password');
     switch (Platform.operatingSystem) {
       case 'macos':
         final content = renderTun2socksPlist(scriptDir: '/opt/homebrew/bin');
@@ -386,7 +371,7 @@ class Tun2socksService {
   }
 
   static Future<String> start(String password) async {
-    _checkNotEmpty(password, 'password');
+    checkNotEmpty(password, 'password');
     switch (Platform.operatingSystem) {
       case 'macos':
         return await NativeBridge.startTun2socks(password);
@@ -401,7 +386,7 @@ class Tun2socksService {
   }
 
   static Future<String> stop(String password) async {
-    _checkNotEmpty(password, 'password');
+    checkNotEmpty(password, 'password');
     switch (Platform.operatingSystem) {
       case 'macos':
         return await NativeBridge.stopTun2socks(password);
