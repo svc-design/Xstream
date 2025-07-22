@@ -135,7 +135,7 @@ jobs:
         run: |
           flutter pub get
           dart run flutter_launcher_icons
-          flutter build apk --release
+          flutter build apk --release --split-per-abi --tree-shake-icons
 
       - name: Build iOS App
         if: ${{ matrix.platform == 'ios' }}
