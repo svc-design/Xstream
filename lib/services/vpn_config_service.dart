@@ -343,16 +343,34 @@ class VpnConfig {
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
 
-    final vpnNode = {
-      'name': nodeName,
-      'countryCode': nodeCode,
-      'serviceName': serviceName,
-      'configPath': xrayConfigPath,
-      'enabled': true,
-    };
+    // 创建新的 VPN 节点
+    final newVpnNode = VpnNode(
+      name: nodeName,
+      countryCode: nodeCode,
+      serviceName: serviceName,
+      configPath: xrayConfigPath,
+      enabled: true,
+    );
 
-    final vpnNodesJsonContent = json.encode([vpnNode]);
-    logMessage('✅ vpn_nodes.json 内容生成完成');
+    // 获取现有节点列表
+    var currentNodes = List<VpnNode>.from(_nodes);
+    
+    // 检查是否已存在同名节点，如果存在则更新，否则添加
+    final existingIndex = currentNodes.indexWhere((node) => node.name == nodeName);
+    if (existingIndex != -1) {
+      currentNodes[existingIndex] = newVpnNode;
+      logMessage('更新现有节点: $nodeName');
+    } else {
+      currentNodes.add(newVpnNode);
+      logMessage('添加新节点: $nodeName');
+    }
+
+    // 更新内存中的节点列表
+    _nodes = currentNodes;
+
+    // 生成完整的 JSON 内容
+    final vpnNodesJsonContent = json.encode(currentNodes.map((e) => e.toJson()).toList());
+    logMessage('✅ vpn_nodes.json 内容生成完成，总节点数: ${currentNodes.length}');
     return vpnNodesJsonContent;
   }
 }
