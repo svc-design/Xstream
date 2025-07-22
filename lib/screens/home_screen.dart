@@ -27,9 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showMessage(String msg, {Color? bgColor}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: bgColor),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: bgColor));
   }
 
   @override
@@ -45,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
       vpnNodes = VpnConfig.nodes;
     });
   }
-
 
   Future<void> _toggleNode(VpnNode node) async {
     final nodeName = node.name.trim();
@@ -77,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _activeNode = nodeName);
       _showMessage(msg);
     }
-
   }
 
   Future<void> onSyncConfig() async {
@@ -181,11 +179,12 @@ class _HomeScreenState extends State<HomeScreen> {
         if (name == 'vpn_nodes.json') {
           dest = await VpnConfig.getConfigPath();
         } else if (name.endsWith('.json')) {
-          dest = '${GlobalApplicationConfig.xrayConfigPath}$name';
+          final prefix = await GlobalApplicationConfig.getXrayConfigPath();
+          dest = '$prefix$name';
         } else if (name.endsWith('.plist') ||
             name.endsWith('.service') ||
             name.endsWith('.schtasks')) {
-          dest = GlobalApplicationConfig.servicePath(name);
+          dest = await GlobalApplicationConfig.getServicePath(name);
         } else {
           continue;
         }
@@ -222,8 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (await cfg.exists()) {
           encoder.addFile(cfg, cfg.uri.pathSegments.last);
         }
-        final servicePath =
-            GlobalApplicationConfig.servicePath(node.serviceName);
+        final servicePath = await GlobalApplicationConfig.getServicePath(
+          node.serviceName,
+        );
         final svc = File(servicePath);
         if (await svc.exists()) {
           encoder.addFile(svc, svc.uri.pathSegments.last);
@@ -237,7 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
       addAppLog('[错误] 导出失败: $e', level: LogLevel.error);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +252,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   final isActive = _activeNode == node.name;
                   final isSelected = _selectedNodeNames.contains(node.name);
                   return ListTile(
-                    title: Text('${node.countryCode.toUpperCase()} | ${node.name}'),
+                    title: Text(
+                      '${node.countryCode.toUpperCase()} | ${node.name}',
+                    ),
                     subtitle: const Text('VLESS | tcp'),
                     leading: isUnlocked
                         ? Checkbox(
