@@ -164,7 +164,6 @@ class GlobalApplicationConfig {
   static Future<String> getLocalConfigPath() async {
     switch (Platform.operatingSystem) {
       case 'macos':
-        final bundleId = await getBundleId();
         final baseDir = await getApplicationSupportDirectory();
         var supportPath = baseDir.path;
 
@@ -189,7 +188,7 @@ class GlobalApplicationConfig {
           supportPath = supportPath;
         }
 
-        final xstreamDir = Directory('$supportPath/$bundleId');
+        final xstreamDir = Directory(supportPath);
         await xstreamDir.create(recursive: true);
         return '${xstreamDir.path}/vpn_nodes.json';
 
