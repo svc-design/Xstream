@@ -301,20 +301,21 @@ class VpnConfig {
     try {
       switch (Platform.operatingSystem) {
         case 'macos':
-          return renderXrayPlist(
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
+          return await renderXrayPlist(
             bundleId: bundleId,
             name: nodeCode.toLowerCase(),
             configPath: configPath,
+            xrayPath: xrayPath,
           );
         case 'linux':
-          final home = Platform.environment['HOME'] ?? '~';
-          final xrayPath = '$home/.local/bin/xray';
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
           return renderXrayService(
             xrayPath: xrayPath,
             configPath: configPath,
           );
         case 'windows':
-          final xrayPath = GlobalApplicationConfig.xrayExePath;
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
           return renderXrayServiceWindows(
             serviceName: serviceName.replaceAll('.schtasks', ''),
             xrayPath: xrayPath,
