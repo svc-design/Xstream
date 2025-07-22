@@ -16,6 +16,7 @@ class VpnNode {
   String name;
   String countryCode;
   String configPath;
+
   /// Cross-platform service identifier
   ///
   /// - macOS: LaunchAgent plist file name
@@ -151,8 +152,9 @@ class VpnConfig {
         await jsonFile.delete();
       }
 
-      final servicePath =
-          GlobalApplicationConfig.servicePath(node.serviceName);
+      final servicePath = await GlobalApplicationConfig.getServicePath(
+        node.serviceName,
+      );
       final serviceFile = File(servicePath);
       if (await serviceFile.exists()) {
         await serviceFile.delete();
@@ -217,16 +219,26 @@ class VpnConfig {
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
     final code = nodeName.split('-').first.toLowerCase();
-    final prefix = GlobalApplicationConfig.xrayConfigPath;
+    final prefix = await GlobalApplicationConfig.getXrayConfigPath();
     final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
 
-    final xrayConfigContent = await _generateXrayJsonConfig(domain, port, uuid, setMessage, logMessage);
+    final xrayConfigContent = await _generateXrayJsonConfig(
+      domain,
+      port,
+      uuid,
+      setMessage,
+      logMessage,
+    );
     if (xrayConfigContent.isEmpty) return;
 
-    final serviceName = await GlobalApplicationConfig.serviceNameForRegion(code);
-    final servicePath = GlobalApplicationConfig.servicePath(serviceName);
+    final serviceName = await GlobalApplicationConfig.serviceNameForRegion(
+      code,
+    );
+    final servicePath = await GlobalApplicationConfig.getServicePath(
+      serviceName,
+    );
 
-    final serviceContent = _generateServiceContent(
+    final serviceContent = await _generateServiceContent(
       code,
       bundleId,
       xrayConfigPath,
@@ -234,7 +246,8 @@ class VpnConfig {
     );
     if (serviceContent.isEmpty) return;
 
-    final vpnNodesConfigPath = await GlobalApplicationConfig.getLocalConfigPath();
+    final vpnNodesConfigPath =
+        await GlobalApplicationConfig.getLocalConfigPath();
     final vpnNodesConfigContent = await _generateVpnNodesJsonContent(
       nodeName,
       code,
@@ -267,7 +280,13 @@ class VpnConfig {
     }
   }
 
-  static Future<String> _generateXrayJsonConfig(String domain, String port, String uuid, Function(String) setMessage, Function(String) logMessage) async {
+  static Future<String> _generateXrayJsonConfig(
+    String domain,
+    String port,
+    String uuid,
+    Function(String) setMessage,
+    Function(String) logMessage,
+  ) async {
     checkNotEmpty(domain, 'domain');
     checkNotEmpty(port, 'port');
     checkNotEmpty(uuid, 'uuid');
@@ -282,7 +301,7 @@ class VpnConfig {
           .replaceAll('<DNS2>', DnsConfig.dns2.value);
 
       final jsonObj = jsonDecode(replaced);
-        final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
+      final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
       return formatted;
     } catch (e) {
@@ -292,8 +311,12 @@ class VpnConfig {
     }
   }
 
-  static String _generateServiceContent(
-      String nodeCode, String bundleId, String configPath, String serviceName) {
+  static Future<String> _generateServiceContent(
+    String nodeCode,
+    String bundleId,
+    String configPath,
+    String serviceName,
+  ) async {
     checkNotEmpty(nodeCode, 'nodeCode');
     checkNotEmpty(bundleId, 'bundleId');
     checkNotEmpty(configPath, 'configPath');
@@ -301,20 +324,18 @@ class VpnConfig {
     try {
       switch (Platform.operatingSystem) {
         case 'macos':
-          return renderXrayPlist(
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
+          return await renderXrayPlist(
             bundleId: bundleId,
             name: nodeCode.toLowerCase(),
             configPath: configPath,
+            xrayPath: xrayPath,
           );
         case 'linux':
-          final home = Platform.environment['HOME'] ?? '~';
-          final xrayPath = '$home/.local/bin/xray';
-          return renderXrayService(
-            xrayPath: xrayPath,
-            configPath: configPath,
-          );
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
+          return renderXrayService(xrayPath: xrayPath, configPath: configPath);
         case 'windows':
-          final xrayPath = GlobalApplicationConfig.xrayExePath;
+          final xrayPath = await GlobalApplicationConfig.getXrayExePath();
           return renderXrayServiceWindows(
             serviceName: serviceName.replaceAll('.schtasks', ''),
             xrayPath: xrayPath,
@@ -343,16 +364,38 @@ class VpnConfig {
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
 
-    final vpnNode = {
-      'name': nodeName,
-      'countryCode': nodeCode,
-      'serviceName': serviceName,
-      'configPath': xrayConfigPath,
-      'enabled': true,
-    };
+    // 创建新的 VPN 节点
+    final newVpnNode = VpnNode(
+      name: nodeName,
+      countryCode: nodeCode,
+      serviceName: serviceName,
+      configPath: xrayConfigPath,
+      enabled: true,
+    );
 
-    final vpnNodesJsonContent = json.encode([vpnNode]);
-    logMessage('✅ vpn_nodes.json 内容生成完成');
+    // 获取现有节点列表
+    var currentNodes = List<VpnNode>.from(_nodes);
+
+    // 检查是否已存在同名节点，如果存在则更新，否则添加
+    final existingIndex = currentNodes.indexWhere(
+      (node) => node.name == nodeName,
+    );
+    if (existingIndex != -1) {
+      currentNodes[existingIndex] = newVpnNode;
+      logMessage('更新现有节点: $nodeName');
+    } else {
+      currentNodes.add(newVpnNode);
+      logMessage('添加新节点: $nodeName');
+    }
+
+    // 更新内存中的节点列表
+    _nodes = currentNodes;
+
+    // 生成完整的 JSON 内容
+    final vpnNodesJsonContent = json.encode(
+      currentNodes.map((e) => e.toJson()).toList(),
+    );
+    logMessage('✅ vpn_nodes.json 内容生成完成，总节点数: ${currentNodes.length}');
     return vpnNodesJsonContent;
   }
 }

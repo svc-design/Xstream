@@ -95,6 +95,81 @@ class DnsConfig {
 
 /// 用于获取应用相关的配置信息
 class GlobalApplicationConfig {
+  /// 沙盒化应用目录结构管理
+  static Future<String> getSandboxBasePath() async {
+    final baseDir = await getApplicationSupportDirectory();
+    return baseDir.path;
+  }
+
+  /// 获取二进制文件目录路径
+  static Future<String> getBinariesPath() async {
+    final basePath = await getSandboxBasePath();
+    final binDir = Directory('$basePath/bin');
+    await binDir.create(recursive: true);
+    return binDir.path;
+  }
+
+  /// 获取配置文件目录路径
+  static Future<String> getConfigsPath() async {
+    final basePath = await getSandboxBasePath();
+    final configDir = Directory('$basePath/configs');
+    await configDir.create(recursive: true);
+    return configDir.path;
+  }
+
+  /// 获取服务文件目录路径  
+  static Future<String> getServicesPath() async {
+    final basePath = await getSandboxBasePath();
+    final servicesDir = Directory('$basePath/services');
+    await servicesDir.create(recursive: true);
+    return servicesDir.path;
+  }
+
+  /// 获取临时文件目录路径
+  static Future<String> getTempPath() async {
+    final basePath = await getSandboxBasePath();
+    final tempDir = Directory('$basePath/temp');
+    await tempDir.create(recursive: true);
+    return tempDir.path;
+  }
+
+  /// 获取日志文件目录路径
+  static Future<String> getLogsPath() async {
+    final basePath = await getSandboxBasePath();
+    final logsDir = Directory('$basePath/logs');
+    await logsDir.create(recursive: true);
+    return logsDir.path;
+  }
+
+  /// 获取特定类型文件的完整路径
+  static Future<String> getVpnNodesConfigPath() async {
+    final basePath = await getSandboxBasePath();
+    return '$basePath/vpn_nodes.json';
+  }
+
+  /// 获取Xray配置文件的完整路径
+  static Future<String> getXrayConfigFilePath(String filename) async {
+    final configsPath = await getConfigsPath();
+    return '$configsPath/$filename';
+  }
+
+  /// 获取plist文件的完整路径
+  static Future<String> getPlistFilePath(String plistName) async {
+    final servicesPath = await getServicesPath();
+    return '$servicesPath/$plistName';
+  }
+
+  /// 获取二进制文件的完整路径
+  static Future<String> getBinaryFilePath(String binaryName) async {
+    final binariesPath = await getBinariesPath();
+    return '$binariesPath/$binaryName';
+  }
+
+  /// 获取日志文件的完整路径
+  static Future<String> getLogFilePath(String logName) async {
+    final logsPath = await getLogsPath();
+    return '$logsPath/$logName';
+  }
   /// Windows 平台默认安装目录
   static String get windowsBasePath {
     final program = Platform.environment['ProgramFiles'];
@@ -113,16 +188,25 @@ class GlobalApplicationConfig {
     return alt;
   }
 
-  /// Xray 可执行文件路径
-  static String get xrayExePath {
+  /// Xray 可执行文件路径 - 使用沙盒安全路径
+  static Future<String> getXrayExePath() async {
     switch (Platform.operatingSystem) {
+      case 'macos':
+        // Use sandboxed Application Support directory for App Store compliance
+        final baseDir = await getApplicationSupportDirectory();
+        final binDir = Directory('${baseDir.path}/bin');
+        await binDir.create(recursive: true);
+        return '${binDir.path}/xray';
       case 'windows':
         return '$windowsBasePath\\xray.exe';
       case 'linux':
         final home = Platform.environment['HOME'] ?? '~';
         return '$home/.local/bin/xray';
       default:
-        return '/usr/local/bin/xray';
+        final baseDir = await getApplicationSupportDirectory();
+        final binDir = Directory('${baseDir.path}/bin');
+        await binDir.create(recursive: true);
+        return '${binDir.path}/xray';
     }
   }
   /// 从配置文件或默认值中获取 PRODUCT_BUNDLE_IDENTIFIER
@@ -146,17 +230,20 @@ class GlobalApplicationConfig {
   }
 
   /// 返回各平台下存放 Xray 配置文件的目录，末尾已包含分隔符
-  static String get xrayConfigPath {
+  static Future<String> getXrayConfigPath() async {
     switch (Platform.operatingSystem) {
       case 'macos':
-        return '/opt/homebrew/etc/';
+        // Use sandboxed configs directory for App Store compliance
+        final configsPath = await getConfigsPath();
+        return '$configsPath/';
       case 'windows':
         final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
         return '$base\\Xstream\\';
       case 'linux':
         return '/opt/etc/';
       default:
-        return '';
+        final configsPath = await getConfigsPath();
+        return '$configsPath/';
     }
   }
 
@@ -164,34 +251,8 @@ class GlobalApplicationConfig {
   static Future<String> getLocalConfigPath() async {
     switch (Platform.operatingSystem) {
       case 'macos':
-        final bundleId = await getBundleId();
-        final baseDir = await getApplicationSupportDirectory();
-        var supportPath = baseDir.path;
-
-        // If sandboxed, path_provider returns
-        // ~/Library/Containers/<bundleId>/Data/Library/Application Support
-        // We need to resolve to the classic Application Support directory so
-        // that LaunchAgent services can access the config file.
-        if (supportPath.contains('/Containers/')) {
-          final home = Platform.environment['HOME'];
-          if (home != null) {
-            final segments = supportPath.split(Platform.pathSeparator);
-            final containerIndex = segments.indexOf('Containers');
-            if (containerIndex != -1 && containerIndex + 1 < segments.length) {
-              final containerName = segments[containerIndex + 1];
-              supportPath =
-                  '$home/Library/Application Support/$containerName';
-            }
-          }
-        } else {
-          // Unsandboxed path already points to
-          // ~/Library/Application Support/<container>
-          supportPath = supportPath;
-        }
-
-        final xstreamDir = Directory('$supportPath/$bundleId');
-        await xstreamDir.create(recursive: true);
-        return '${xstreamDir.path}/vpn_nodes.json';
+        // Use getVpnNodesConfigPath for consistent sandbox compliance
+        return await getVpnNodesConfigPath();
 
       case 'windows':
         final xstreamDir = Directory(windowsBasePath);
@@ -206,10 +267,7 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}/vpn_nodes.json';
 
       default:
-        final baseDir = await getApplicationSupportDirectory();
-        final xstreamDir = Directory('${baseDir.path}/xstream');
-        await xstreamDir.create(recursive: true);
-        return '${xstreamDir.path}/vpn_nodes.json';
+        return await getVpnNodesConfigPath();
     }
   }
 
@@ -230,17 +288,19 @@ class GlobalApplicationConfig {
   }
 
   /// 根据平台和服务名称返回服务配置文件路径
-  static String servicePath(String serviceName) {
+  static Future<String> getServicePath(String serviceName) async {
     switch (Platform.operatingSystem) {
       case 'macos':
-        final home = Platform.environment['HOME'] ?? '/Users/unknown';
-        return '$home/Library/LaunchAgents/$serviceName';
+        // Use sandboxed services directory for App Store compliance
+        final servicesPath = await getServicesPath();
+        return '$servicesPath/$serviceName';
       case 'linux':
         return '/etc/systemd/system/$serviceName';
       case 'windows':
         return '$windowsBasePath\\$serviceName';
       default:
-        return serviceName;
+        final servicesPath = await getServicesPath();
+        return '$servicesPath/$serviceName';
     }
   }
 }
